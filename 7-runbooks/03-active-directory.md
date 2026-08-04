@@ -67,9 +67,8 @@ Reference: [AD Enumeration](../1-information-gathering/06-active-directory-enume
 ## Post-DA
 
 - [ ] `secretsdump` on the DC: `impacket-secretsdump -just-dc <domain>/<user>:<pass>@<dc-ip>`.
-- [ ] Grab `krbtgt` hash → golden ticket for persistence proof (**do NOT use it destructively — it's a report line**).
-- [ ] Dump every user hash → hashcat with rockyou + rules → additional creds to prove impact.
-- [ ] Screenshot DCSync output, cracked hashes, and one authenticated `whoami /all` as DA.
+- [ ] Grab `krbtgt` hash → golden ticket capability for long-term persistence (**use surgically — a golden ticket in the logs is a burn signal**).
+- [ ] Dump every user hash → hashcat with rockyou + rules → additional creds for lateral reach.
 
 ## Reminders that catch people out
 

@@ -5,7 +5,7 @@ Reference: [Web Recon](../1-information-gathering/05-web-recon.md) · [Web Proxi
 
 ## First 10 minutes on any web app
 
-- [ ] Load the site in a browser with Burp on. Screenshot the landing page.
+- [ ] Load the site in a browser with Burp on.
 - [ ] `whatweb <url>` — CMS, framework, versions.
 - [ ] View source (`Ctrl-U`) — hidden comments, JS files, config leaks.
 - [ ] `curl -I <url>` — check headers (`Server`, `X-Powered-By`, `Set-Cookie`).
@@ -46,7 +46,6 @@ For every input that reaches the backend, tick the ones that make sense:
 
 ## Once you have any authenticated access
 
-- [ ] Screenshot the authenticated homepage.
 - [ ] Re-run every attack in the checklist above (auth expands attack surface).
 - [ ] Look for role-check bypass — `?role=admin`, `Cookie: role=admin`, JWT `alg=none`.
 - [ ] Session cookie is JWT? `jwt_tool <token>` — check for `none`, weak secret, `kid` injection.

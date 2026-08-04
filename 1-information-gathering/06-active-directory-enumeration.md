@@ -252,7 +252,7 @@ GET NTLMV2UNIQUE             # show unique captures
 GET NTLMV2USERNAMES          # show captured usernames
 ```
 
-#### Remediation (for the report)
+#### Mitigation (defender view)
 
 Disable LLMNR and NBT-NS:
 

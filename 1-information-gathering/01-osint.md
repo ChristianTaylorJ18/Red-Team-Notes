@@ -114,5 +114,4 @@ Also useful: `bgp.he.net` for ASN → CIDR mapping.
 ### OPSEC Reminders
 
 - Use a clean browser profile / VM for OSINT — cookies and login state leak intent.
-- Strip metadata from your own screenshots before sharing them in a report.
 - Stay passive when possible. Active recon (nmap, fierce brute force) is detectable and may violate scope timing rules.

@@ -39,7 +39,7 @@ Tick every one that applies:
 - [ ] **1433 MSSQL** — `nxc mssql <ip> -u sa -p sa`.
 - [ ] **2049 NFS** — `showmount -e <ip>`; `mount -t nfs <ip>:/share /mnt/nfs`.
 - [ ] **3306 MySQL / 5432 PostgreSQL** — try default creds, then `medusa -M mysql`.
-- [ ] **3389 RDP** — `nxc rdp <ip>`; screenshot the login screen for domain name.
+- [ ] **3389 RDP** — `nxc rdp <ip>`; grab the login banner for the domain name.
 - [ ] **5985/5986 WinRM** — `nxc winrm <ip>`; `evil-winrm` with any cred you already have.
 - [ ] **6379 Redis** — `redis-cli -h <ip>`, then `INFO` and `CONFIG GET *`.
 - [ ] **8080/9090** — Tomcat / Jenkins / Splunk — try default creds and manager URLs.

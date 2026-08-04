@@ -9,7 +9,6 @@ Reference: [Windows Privilege Escalation](../4-post-exploitation/02-windows-priv
 - [ ] OS + patch level: `systeminfo`. Note `OS Version` and installed hotfixes.
 - [ ] Domain-joined? `systeminfo | findstr /B "Domain"`. If `WORKGROUP`, skip AD attacks.
 - [ ] Users: `net user`; groups: `net localgroup`; admins: `net localgroup administrators`.
-- [ ] Screenshot `whoami /all` for the report.
 
 ## Run the automated tools first
 
@@ -72,7 +71,6 @@ Any of these = instant local admin/SYSTEM:
 ## Once SYSTEM / admin
 
 - [ ] `type C:\Users\Administrator\Desktop\root.txt` (or wherever).
-- [ ] Screenshot: `whoami && hostname && type flag.txt`.
 - [ ] Dump SAM + LSA + LSASS — every hash to feed cracker and Pass-the-Hash.
 - [ ] Search all user profiles for creds/notes.
 - [ ] Check for domain admin sessions — logged-on users (`qwinsta`, `tasklist /v /fi "username eq domain\\*"`).

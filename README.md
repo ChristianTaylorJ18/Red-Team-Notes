@@ -1,8 +1,8 @@
-# CPTS Notes
+# Red Team Notes
 
-A clean, sectioned reference for the **HTB Certified Penetration Testing Specialist (CPTS)** path, distilled from course material (CIS4201) and lab notes.
+A clean, sectioned reference distilled from HTB CPTS coursework, CIS4201 material, and lab notes — now scoped toward red-team operations.
 
-Each stage folder holds a set of `.md` files covering one focused topic; sections are ordered to mirror an engagement from the first packet to the final report.
+Each stage folder holds a set of `.md` files covering one focused topic; sections mirror an engagement from the first packet through post-ex and pivoting.
 
 ---
 
@@ -15,8 +15,7 @@ Each stage folder holds a set of `.md` files covering one focused topic; section
 | 3 | [Exploitation](./3-exploitation/) | Shells, payloads, Metasploit, file transfers, web exploits, AD initial access |
 | 4 | [Post-Exploitation](./4-post-exploitation/) | Linux & Windows privesc, credential dumping, persistence, shell upgrades |
 | 5 | [Lateral Movement](./5-lateral-movement/) | AD overview, Kerberos attacks, ACL abuse, Windows pivoting |
-| 6 | [Report Writing](./6-report-writing/) | Report structure, engagement types, deliverables & remediation |
-| 7 | [Exam Checklist](./7-exam-checklist/) | Actionable "when I'm stuck, run this" playbook for exam day |
+| 7 | [Runbooks](./7-runbooks/) | Actionable "when I'm stuck, run this" playbooks by phase |
 
 ---
 
@@ -59,21 +58,15 @@ Each stage folder holds a set of `.md` files covering one focused topic; section
 - [04 - ACL Abuse with bloodyAD](./5-lateral-movement/04-acl-abuse-bloodyad.md)
 - [05 - Windows Pivoting](./5-lateral-movement/05-windows-pivoting.md)
 
-### 6. Report Writing
-- [01 - Report Fundamentals](./6-report-writing/01-report-fundamentals.md)
-- [02 - Engagement Types & Compliance](./6-report-writing/02-engagement-types.md)
-- [03 - Deliverables and Remediation](./6-report-writing/03-deliverables-remediation.md)
-
-### 7. Exam Checklist
-- [00 - Methodology & Setup](./7-exam-checklist/00-methodology.md)
-- [01 - Recon](./7-exam-checklist/01-recon.md)
-- [02 - Web](./7-exam-checklist/02-web.md)
-- [03 - Active Directory](./7-exam-checklist/03-active-directory.md)
-- [04 - Linux Privesc](./7-exam-checklist/04-linux-privesc.md)
-- [05 - Windows Privesc](./7-exam-checklist/05-windows-privesc.md)
-- [06 - Password Attacks](./7-exam-checklist/06-password-attacks.md)
-- [07 - Pivoting](./7-exam-checklist/07-pivoting.md)
-- [08 - Report](./7-exam-checklist/08-report.md)
+### 7. Runbooks
+- [00 - Methodology & Setup](./7-runbooks/00-methodology.md)
+- [01 - Recon](./7-runbooks/01-recon.md)
+- [02 - Web](./7-runbooks/02-web.md)
+- [03 - Active Directory](./7-runbooks/03-active-directory.md)
+- [04 - Linux Privesc](./7-runbooks/04-linux-privesc.md)
+- [05 - Windows Privesc](./7-runbooks/05-windows-privesc.md)
+- [06 - Password Attacks](./7-runbooks/06-password-attacks.md)
+- [07 - Pivoting](./7-runbooks/07-pivoting.md)
 
 ---
 
@@ -98,8 +91,7 @@ notes_refurb/
 ├── 3-exploitation/
 ├── 4-post-exploitation/
 ├── 5-lateral-movement/
-├── 6-report-writing/
-├── 7-exam-checklist/               ← actionable exam-day playbooks
+├── 7-runbooks/                     ← actionable playbooks by phase
 └── _archive/                       ← original PDF sources
 ```
 

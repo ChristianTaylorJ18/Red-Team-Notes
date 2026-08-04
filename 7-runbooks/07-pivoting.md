@@ -63,8 +63,7 @@ Reference: [Windows Pivoting](../5-lateral-movement/05-windows-pivoting.md).
 - [ ] `netsh interface portproxy add v4tov4 listenport=3389 listenaddress=0.0.0.0 connectport=3389 connectaddress=10.10.20.5`.
 - [ ] PowerShell reverse SOCKS via `Invoke-SocksProxy.ps1` (from BC-SECURITY / PowerSploit branches).
 
-## Screenshot for the report
+## Confirm the pivot before you build on it
 
-- [ ] Screenshot the tunnel command running on the pivot.
-- [ ] Screenshot a successful scan/shell against the new subnet **from Kali**, with `tun0` + target visible.
-- [ ] Note the pivot chain in your report: `Kali → 10.10.10.5 (foothold) → 10.10.20.5 (final)`.
+- [ ] From Kali, run a scan against the new subnet through the tunnel — confirm `tun0` (or the SOCKS proxychain) actually reaches it before you commit an hour of enum to it.
+- [ ] Note the pivot chain in your ops log: `Kali → 10.10.10.5 (foothold) → 10.10.20.5 (target)`. Future-you needs to know which hop broke when the chain drops.

@@ -9,7 +9,6 @@ Reference: [Linux Privilege Escalation](../4-post-exploitation/01-linux-privileg
 - [ ] Identify yourself: `id; whoami; hostname; ip a`.
 - [ ] Distro + kernel: `uname -a; cat /etc/os-release`.
 - [ ] Users with a login shell: `grep -vE 'nologin|false' /etc/passwd`.
-- [ ] Screenshot `id && hostname` — evidence for the report.
 
 ## Run the automated tools first (they cover 80%)
 
@@ -60,8 +59,7 @@ Reference: [Linux Privilege Escalation](../4-post-exploitation/01-linux-privileg
 ## Once root
 
 - [ ] `cat /root/root.txt` (or wherever the flag is).
-- [ ] Screenshot: `id && cat /root/root.txt && hostname`.
-- [ ] Grab `/etc/shadow` — dump to your box for hashcat and the report.
+- [ ] Grab `/etc/shadow` — dump to your box for hashcat, feed cracked hashes into cred spraying.
 - [ ] Grab SSH keys from `/root/.ssh/`, `/home/*/.ssh/` — feed into pivots.
 - [ ] Check for stored creds in `/root/`, `/var/backups/`, `/opt/`.
 - [ ] Any DB present? Dump it — often a source of creds that work elsewhere.
