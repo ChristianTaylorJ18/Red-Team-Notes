@@ -34,7 +34,7 @@ Tick every one that applies:
 - [ ] **88 Kerberos / 389 LDAP / 445 SMB** — jump to [03-active-directory.md](./03-active-directory.md).
 - [ ] **110/143/993/995 IMAP/POP3** — try known creds with `nxc pop3` / `medusa -M imap`.
 - [ ] **111 rpcbind** — `rpcinfo -p <ip>`. NFS shares often piggyback here.
-- [ ] **135/139/445 SMB** — see AD checklist; also `nxc smb <ip>` for share/OS/signing info.
+- [ ] **135/139/445 SMB** — see AD checklist; also `nxc smb <ip>` for share/OS/signing info. If `-u '' -p ''` (anonymous) comes back empty, always also try `-u guest -p ''` — guest is a separate authenticator and often left enabled after anon is locked down.
 - [ ] **161 SNMP** — `snmpwalk -c public -v2c <ip>`; try `snmp-check <ip>`. Community strings: `public`, `private`, `manager`.
 - [ ] **1433 MSSQL** — `nxc mssql <ip> -u sa -p sa`.
 - [ ] **2049 NFS** — `showmount -e <ip>`; `mount -t nfs <ip>:/share /mnt/nfs`.

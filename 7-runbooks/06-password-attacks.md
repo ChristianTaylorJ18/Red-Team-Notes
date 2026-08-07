@@ -42,6 +42,7 @@ Reference: [Password Attacks](../2-pre-exploitation/03-password-attacks.md) · [
 - [ ] **6. Combinator**: `hashcat -m <mode> -a 1 hash.txt words1.txt words2.txt`.
 - [ ] **7. Prince attack**: `hashcat -m <mode> hash.txt --potfile-disable rockyou.txt --stdout | ...` — good for surprise combos.
 - [ ] Save every crack to `creds.txt` immediately.
+- [ ] **Dump the potfile after every cracking session** to catch runs you forgot about: `cat ~/.local/share/hashcat/hashcat.potfile` → merge unique entries into `creds.txt`.
 
 ## When cracking is too slow
 

