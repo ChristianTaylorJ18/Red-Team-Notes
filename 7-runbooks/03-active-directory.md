@@ -31,7 +31,10 @@ Reference: [AD Enumeration](../1-information-gathering/06-active-directory-enume
 - [ ] Domain enum with bloodhound: `bloodhound-python -u <user> -p <pass> -d <domain> -ns <dc-ip> -c All`.
   - Import into BloodHound → run "Find Shortest Paths to Domain Admins" from your owned user.
 - [ ] LDAP dump: `ldapdomaindump -u <domain>\\<user> -p <pass> <dc-ip>`.
-- [ ] Password stored in `Description` / `Info` / `Comment` fields: `nxc ldap <dc-ip> -u <user> -p <pass> -M user-desc`, then also grep the full LDAP dump for `pass`, `pwd`, `secret`, `cred`.
+- [ ] **Always pull LDAP with `"*"` to see every attribute** — default output hides the interesting ones: `ldapsearch -x -H ldap://<dc-ip> -D '<user>@<dom>' -w '<pass>' -b 'dc=<dom>,dc=<tld>' '(objectClass=user)' '*'`.
+- [ ] Grep the full dump for creds in: `description`, `info`, `comment`, `notes`, `userPassword`, `unixUserPassword`, `unicodePwd`, `ms-Mcs-AdmPwd` (LAPS), `msDS-ManagedPassword` (gMSA), and any custom / non-standard attribute (`*legacyPwd`, `*helpdeskPwd`, etc. — non-stock schema is a red flag).
+- [ ] `nxc ldap <dc-ip> -u <user> -p <pass> -M user-desc` for a quick description-only sweep.
+- [ ] **AD Recycle Bin check** — if the user belongs to `AD Recycle Bin` (or has `Read Deleted Objects`), old privileged accounts often have their creds in `description`: `Get-ADObject -Filter 'isDeleted -eq $true' -IncludeDeletedObjects -Properties *`. From Linux: `ldapsearch ... -b 'CN=Deleted Objects,DC=<dom>,DC=<tld>' -E '!1.2.840.113556.1.4.417' '(objectClass=user)' '*'`.
 
 ## Common share loot (do this immediately after mounting anything)
 
@@ -41,7 +44,9 @@ Reference: [AD Enumeration](../1-information-gathering/06-active-directory-enume
 - [ ] `unattend.xml`, `sysprep.xml`, `autounattend.xml` — plaintext admin creds.
 - [ ] User profile shares — `.rdp` files with saved creds, browser profiles.
 - [ ] **`.xlsx` / `.docx` / `.pptx` that won't open cleanly** — they're just ZIP files. `unzip file.xlsx -d out/`, then `grep -r 'pass\|user' out/`. Strings live in `xl/sharedStrings.xml`.
-- [ ] **Custom admin binaries (`UserInfo.exe`, `LoginChecker.exe`, anything internal-looking)** — `strings -n 8 <file> | grep -iE 'pass|ldap|conn'`. If .NET: `ilspycmd <file> -o decompiled/` and grep for creds. Service accounts often called `ldap`, `svc_ldap`.
+- [ ] **Custom admin binaries (`UserInfo.exe`, `LoginChecker.exe`, anything internal-looking)** — `strings -n 8 <file> | grep -iE 'pass|ldap|conn'`. If .NET: `ilspycmd <file> -o decompiled/` and grep for creds. Service accounts often called `ldap`, `svc_ldap`. **Also decompile every `.dll` in the same directory** — if the exe calls a function that isn't defined in its own decompile, the definition (crypto/decrypt routines especially) lives in a sibling DLL.
+- [ ] **Encrypted blobs in local sqlite (`audit.db`, `app.db`, `settings.db`)** — dump with `sqlite3 <file> .dump`, find the decrypt routine in the app's DLLs, reproduce in CyberChef (AES/DES/RC4 recipes).
+- [ ] **`.reg` files with `"Password"=hex:...`** — if it's VNC (RealVNC/TightVNC/UltraVNC), decrypt with `vncpwd`: `echo -n -e '\x6b\xcf\x...' > pass.bin && ./vncpwd pass.bin`.
 
 ## Attack list (tick as you rule each out)
 

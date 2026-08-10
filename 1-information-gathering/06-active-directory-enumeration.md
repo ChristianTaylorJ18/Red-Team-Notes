@@ -232,9 +232,60 @@ ldapsearch -x -H ldap://<dc-ip> -D '<user>@<domain>' -w '<pass>' \
 ## Just users
 ldapsearch -x -H ldap://<dc-ip> -D '<user>@<domain>' -w '<pass>' \
     -b 'dc=<dom>,dc=<tld>' '(objectClass=user)'
+
+## PULL EVERY ATTRIBUTE — the default view hides the interesting fields
+ldapsearch -x -H ldap://<dc-ip> -D '<user>@<domain>' -w '<pass>' \
+    -b 'dc=<dom>,dc=<tld>' '(objectClass=user)' '*'
+```
+
+Attributes worth grepping for by name — the default output skips most of these:
+
+| Attribute | Why |
+|-----------|-----|
+| `description`, `info`, `comment`, `notes` | Cleartext passwords, onboarding notes, temp creds |
+| `userPassword`, `unixUserPassword`, `unicodePwd` | Occasionally actually populated |
+| `ms-Mcs-AdmPwd` | **LAPS** local admin password — visible if your bind account has the ACL |
+| `msDS-ManagedPassword` | **gMSA** password blob — readable only by principals in `PrincipalsAllowedToRetrieveManagedPassword` |
+| `msDS-KeyCredentialLink` | Shadow credentials attack surface |
+| Custom / non-standard (e.g. `cascadeLegacyPwd`, `legacyPwd`, `helpdeskPwd`) | Anything not stock AD is a red flag — the admins put it there for a reason |
+
+Quick sweep across a full dump:
+
+```bash
+ldapsearch ... '(objectClass=user)' '*' > ldap.dump
+grep -iE '^(description|info|comment|notes|userPassword|.*Pwd|ms-Mcs-AdmPwd|msDS-ManagedPassword):' ldap.dump
 ```
 
 > The `info` / `description` / `comment` / `userPassword` attributes on user objects sometimes contain literal passwords the sysadmin dropped in years ago. Always grep the full user dump for `pass`, `pwd`, `secret`, `cred`.
+
+#### AD Recycle Bin — Query Deleted Objects
+
+When AD Recycle Bin is enabled (Windows Server 2008 R2+), deleted objects are *tombstoned* for 180 days by default — their attributes are still queryable if you can hit the `Deleted Objects` container. Membership in **`AD Recycle Bin`** (or having the `Read Deleted Objects` extended right) is enough.
+
+**Why this matters:** old privileged accounts, decommissioned service accounts, and "TempAdmin"-style accounts often have their password stashed in `description` or `info` — and nobody rotates them because "the account is deleted." From an authenticated shell as a member of `AD Recycle Bin`:
+
+```powershell
+## Every deleted object
+Get-ADObject -Filter 'isDeleted -eq $true' -IncludeDeletedObjects
+
+## Deleted users only, with all attributes
+Get-ADObject -Filter '(isDeleted -eq $true) -and (ObjectClass -eq "user")' \
+    -IncludeDeletedObjects -Properties *
+
+## Hunt for anything admin-adjacent
+Get-ADObject -Filter 'Name -like "*TempAdmin*"' -IncludeDeletedObjects -Properties *
+Get-ADObject -Filter 'Name -like "*svc*"'      -IncludeDeletedObjects -Properties *
+```
+
+From Linux with creds, the same idea via LDAP — the deleted objects live in `CN=Deleted Objects,DC=...` with a required control flag:
+
+```bash
+ldapsearch -x -H ldap://<dc-ip> -D '<user>@<domain>' -w '<pass>' \
+    -b 'CN=Deleted Objects,DC=<dom>,DC=<tld>' \
+    -E '!1.2.840.113556.1.4.417' '(objectClass=user)' '*'
+```
+
+Grep the output for `description`, `info`, `cascadeLegacyPwd`, or any custom attribute — that's where the old creds live.
 
 ### LDAP
 
