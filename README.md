@@ -13,7 +13,7 @@ Each stage folder holds a set of `.md` files covering one focused topic; section
 | 1 | [Information Gathering](./1-information-gathering/) | OSINT, DNS, Nmap, service & web recon, AD enumeration |
 | 2 | [Pre-Exploitation](./2-pre-exploitation/) | Vulnerability assessment concepts, web proxies, password / wordlist prep |
 | 3 | [Exploitation](./3-exploitation/) | Shells, payloads, Metasploit, file transfers, web exploits, AD initial access |
-| 4 | [Post-Exploitation](./4-post-exploitation/) | Linux & Windows privesc, credential dumping, persistence, shell upgrades |
+| 4 | [Post-Exploitation](./4-post-exploitation/) | Linux & Windows privesc, credential dumping, persistence, stealth, shell upgrades |
 | 5 | [Lateral Movement](./5-lateral-movement/) | AD overview, Kerberos attacks, ACL abuse, Windows pivoting |
 | 7 | [Runbooks](./7-runbooks/) | Actionable "when I'm stuck, run this" playbooks by phase |
 
@@ -50,6 +50,7 @@ Each stage folder holds a set of `.md` files covering one focused topic; section
 - [03 - Credential Dumping](./4-post-exploitation/03-credential-dumping.md)
 - [04 - Persistence](./4-post-exploitation/04-persistence.md)
 - [05 - Shell Upgrades](./4-post-exploitation/05-shell-upgrades.md)
+- [06 - Stealth Persistence & OPSEC](./4-post-exploitation/06-stealth-persistence.md)
 
 ### 5. Lateral Movement
 - [01 - Active Directory Overview](./5-lateral-movement/01-active-directory-overview.md)
