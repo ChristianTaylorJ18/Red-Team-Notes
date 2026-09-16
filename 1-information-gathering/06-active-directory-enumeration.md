@@ -203,6 +203,8 @@ kerbrute passwordspray -d inlanefreight.local --dc 172.16.5.5 valid_users.txt We
 
 > If clock skew breaks Kerberos: `sudo ntpdate <dc-ip>` or `sudo date -s "<time>"`.
 
+> **Sanitize the userlist before feeding it to kerbrute.** A trailing space or stray whitespace after a name makes `userenum` silently fail to validate that user. Strip it first: `sed -i 's/[[:space:]]*$//' users.txt` (or `awk '{$1=$1};1'`). The same bites `nxc` on any list you pass it.
+
 ### First Creds → Loot Everything They Touch
 
 The moment a set of creds authenticates, run this loop before anything fancy. Half the boxes are already over by the end of it.
@@ -289,6 +291,16 @@ grep -iE '^(description|info|comment|notes|userPassword|.*Pwd|ms-Mcs-AdmPwd|msDS
 ```
 
 > The `info` / `description` / `comment` / `userPassword` attributes on user objects sometimes contain literal passwords the sysadmin dropped in years ago. Always grep the full user dump for `pass`, `pwd`, `secret`, `cred`.
+
+##### Check group membership over LDAP (no shell needed)
+
+You don't need a session to see what groups a user belongs to — if you can bind to LDAP, `nxc` will resolve it for you:
+
+```bash
+nxc ldap <dc-ip> -u <user> -p '<pass>' -M groupmembership -o USER=<user>
+```
+
+Fast way to spot that a freshly-cracked account sits in something interesting (`Remote Management Users`, `Backup Operators`, `DnsAdmins`, a custom admin group) before you spend time earning a shell.
 
 #### AD Recycle Bin — Query Deleted Objects
 
@@ -419,6 +431,8 @@ Host the script on `SYSVOL`, link via a GPO to all hosts, then restart.
 ```bash
 bloodhound-python -u 'forend' -p 'Klmcargo2' -ns 172.16.5.5 -d inlanefreight.local -c all
 ```
+
+> **Always collect with `-c All`.** The default collection method skips ACL data, so you'll miss `GenericAll` / `WriteDACL` / `ForceChangePassword` edges — which are usually the entire path to DA. Use `-c All`, or `-c DCOnly` when you need to stay quiet.
 
 #### SharpHound on a domain host
 

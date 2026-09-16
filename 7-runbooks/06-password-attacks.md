@@ -59,6 +59,8 @@ Reference: [Password Attacks](../2-pre-exploitation/03-password-attacks.md) · [
 ## Spraying (once you have a userlist)
 
 - [ ] Never spray without a userlist AND without checking lockout policy.
+- [ ] **Sanitize the userlist first** — strip trailing whitespace (`sed -i 's/[[:space:]]*$//' users.txt`); a stray space after a name makes kerbrute/nxc silently skip it.
+- [ ] **Test username == password before anything else** (any service, not just AD): `nxc smb <ip> -u users.txt -p users.txt --no-brute --continue-on-success`.
 - [ ] SMB: `nxc smb hosts.txt -u users.txt -p '<Season><Year>!' --continue-on-success`.
 - [ ] WinRM: same but `nxc winrm`.
 - [ ] SSH: `nxc ssh hosts.txt -u users.txt -p passwords.txt --continue-on-success`.
@@ -88,12 +90,12 @@ Reference: [Password Attacks](../2-pre-exploitation/03-password-attacks.md) · [
 Any time you find a credential — even a low-priv one — spray it across every service and every host:
 
 ```bash
-nxc smb   hosts.txt -u creds.txt --continue-on-success
-nxc winrm hosts.txt -u creds.txt --continue-on-success
-nxc rdp   hosts.txt -u creds.txt --continue-on-success
-nxc ssh   hosts.txt -u creds.txt --continue-on-success
-nxc ldap  hosts.txt -u creds.txt --continue-on-success
-nxc mssql hosts.txt -u creds.txt --continue-on-success
+nxc smb   hosts.txt -u users.txt -p passwords.txt --continue-on-success
+nxc winrm hosts.txt -u users.txt -p passwords.txt --continue-on-success
+nxc rdp   hosts.txt -u users.txt -p passwords.txt --continue-on-success
+nxc ssh   hosts.txt -u users.txt -p passwords.txt --continue-on-success
+nxc ldap  hosts.txt -u users.txt -p passwords.txt --continue-on-success
+nxc mssql hosts.txt -u users.txt -p passwords.txt --continue-on-success
 ```
 
-Where `creds.txt` has one `user:pass` per line and `nxc` expands them.
+`nxc` has **no** `-u creds.txt` mode — it takes a userlist and a passlist separately and tries every combination. Keep `users.txt` and `passwords.txt` as parallel files. Also run it as `-u users.txt -p users.txt --no-brute --continue-on-success` to catch accounts where username == password.
