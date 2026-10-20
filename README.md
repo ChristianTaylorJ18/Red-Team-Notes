@@ -15,6 +15,7 @@ Each stage folder holds a set of `.md` files covering one focused topic; section
 | 3 | [Exploitation](./3-exploitation/) | Shells, payloads, Metasploit, file transfers, web exploits, AD initial access |
 | 4 | [Post-Exploitation](./4-post-exploitation/) | Linux & Windows privesc, credential dumping, persistence, stealth, shell upgrades |
 | 5 | [Lateral Movement](./5-lateral-movement/) | AD overview, Kerberos attacks, ACL abuse, Windows pivoting |
+| 6 | [Report Writing](./6-report-writing/) | Report structure, engagement types & compliance, deliverables & remediation |
 | 7 | [Runbooks](./7-runbooks/) | Actionable "when I'm stuck, run this" playbooks by phase |
 
 ---
@@ -59,6 +60,11 @@ Each stage folder holds a set of `.md` files covering one focused topic; section
 - [04 - ACL Abuse with bloodyAD](./5-lateral-movement/04-acl-abuse-bloodyad.md)
 - [05 - Windows Pivoting](./5-lateral-movement/05-windows-pivoting.md)
 
+### 6. Report Writing
+- [01 - Report Fundamentals](./6-report-writing/01-report-fundamentals.md)
+- [02 - Engagement Types & Compliance](./6-report-writing/02-engagement-types.md)
+- [03 - Deliverables and Remediation](./6-report-writing/03-deliverables-remediation.md)
+
 ### 7. Runbooks
 - [00 - Methodology & Setup](./7-runbooks/00-methodology.md)
 - [01 - Recon](./7-runbooks/01-recon.md)
@@ -92,6 +98,7 @@ notes_refurb/
 ├── 3-exploitation/
 ├── 4-post-exploitation/
 ├── 5-lateral-movement/
+├── 6-report-writing/               ← report structure, engagement types, remediation
 ├── 7-runbooks/                     ← actionable playbooks by phase
 └── _archive/                       ← original PDF sources
 ```
