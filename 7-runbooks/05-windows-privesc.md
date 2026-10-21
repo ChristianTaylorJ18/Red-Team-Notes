@@ -1,5 +1,7 @@
 # 05 — Windows Privilege Escalation
 
+**Jump to:** [First 5 minutes on any Windows shell](#first-5-minutes-on-any-windows-shell) · [Run the automated tools first](#run-the-automated-tools-first) · [Token privileges (check `whoami /priv` first — this is the fastest win)](#token-privileges-check-whoami-priv-first--this-is-the-fastest-win) · [Service misconfigurations](#service-misconfigurations) · [Credential hunting](#credential-hunting) · [Dumping hashes (once you have local admin)](#dumping-hashes-once-you-have-local-admin) · [Kernel exploits (last resort)](#kernel-exploits-last-resort) · [AV / Defender bypass gotchas](#av--defender-bypass-gotchas) · [Once SYSTEM / admin](#once-system--admin)
+
 Trigger: any shell on a Windows host.
 Reference: [Windows Privilege Escalation](../4-post-exploitation/02-windows-privilege-escalation.md) · [Credential Dumping](../4-post-exploitation/03-credential-dumping.md).
 

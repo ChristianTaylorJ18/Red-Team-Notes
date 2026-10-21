@@ -1,4 +1,6 @@
-## Active Directory Overview
+# 01 — Active Directory Overview
+
+**Jump to:** [Structure](#structure) · [Identifiers](#identifiers) · [Well-Known RIDs Worth Remembering](#well-known-rids-worth-remembering) · [Default High-Value Groups](#default-high-value-groups) · [Trusts](#trusts) · [Access Control Building Blocks](#access-control-building-blocks) · [Group Policy (quick mental model)](#group-policy-quick-mental-model) · [See Also](#see-also)
 
 A grounding section before the protocol- and attack-specific chapters. If the words *forest*, *domain*, *OU*, *trust*, *SID*, *RID* aren't muscle memory, this is the place to start.
 

@@ -1,5 +1,7 @@
 # 02 — Web
 
+**Jump to:** [First 10 minutes on any web app](#first-10-minutes-on-any-web-app) · [Enumeration](#enumeration) · [Attack surface triage (per input field)](#attack-surface-triage-per-input-field) · [Login pages](#login-pages) · [Once you have any authenticated access](#once-you-have-any-authenticated-access) · [CMS / product-specific](#cms--product-specific) · [When it works — get a shell](#when-it-works--get-a-shell)
+
 Trigger: any HTTP(S) port open.
 Reference: [Web Recon](../1-information-gathering/05-web-recon.md) · [Web Proxies](../2-pre-exploitation/02-web-proxies.md) · [Web Exploits](../3-exploitation/04-web-exploits.md).
 

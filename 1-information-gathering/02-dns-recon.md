@@ -1,4 +1,6 @@
-## DNS Reconnaissance
+# 02 — DNS Reconnaissance
+
+**Jump to:** [Tool Comparison](#tool-comparison) · [dig Quick Reference](#dig-quick-reference) · [Zone Transfer (AXFR)](#zone-transfer-axfr) · [DNS Server Config to Look For](#dns-server-config-to-look-for) · [dnsenum](#dnsenum) · [Fierce](#fierce) · [Subdomain Enumeration (mix and match)](#subdomain-enumeration-mix-and-match) · [vhost Fuzzing (find virtual hosts behind one IP)](#vhost-fuzzing-find-virtual-hosts-behind-one-ip) · [Always Add Hostnames to /etc/hosts](#always-add-hostnames-to-etchosts)
 
 DNS is one of the highest-signal recon sources you have: subdomains map directly to additional attack surface, and a misconfigured zone transfer can hand you the entire internal name space.
 

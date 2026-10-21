@@ -1,4 +1,6 @@
-## AD Protocols
+# 02 — AD Protocols
+
+**Jump to:** [Kerberos (88, 464)](#kerberos-88-464) · [NTLM (no fixed port — over SMB 445, HTTP, MSSQL, etc.)](#ntlm-no-fixed-port--over-smb-445-http-mssql-etc) · [LDAP (389) / LDAPS (636)](#ldap-389--ldaps-636) · [SMB (445)](#smb-445) · [DNS (53)](#dns-53) · [Global Catalog (3268 / 3268S)](#global-catalog-3268--3268s) · [WinRM (5985 / 5986)](#winrm-5985--5986) · [WMI (135 + dynamic high ports)](#wmi-135--dynamic-high-ports) · [MS-RPC over Named Pipes / TCP](#ms-rpc-over-named-pipes--tcp) · [See Also](#see-also)
 
 The wire-level pieces of Active Directory. Knowing the protocols lets you predict which attacks apply, which logs they leave, and where to coerce / relay.
 

@@ -1,5 +1,7 @@
 # 00 — Methodology & Setup
 
+**Jump to:** [Before the op](#before-the-op) · [First 30 minutes](#first-30-minutes) · [Day-one enum drill](#day-one-enum-drill) · [When you're stuck (the 45-minute rule)](#when-youre-stuck-the-45-minute-rule) · [Cred hygiene](#cred-hygiene) · [Pacing (multi-day ops)](#pacing-multi-day-ops)
+
 ## Before the op
 
 - [ ] Kali is snapshotted and up to date (`apt update && apt full-upgrade`).

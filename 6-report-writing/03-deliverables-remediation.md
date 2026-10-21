@@ -1,4 +1,6 @@
-## Deliverables and Remediation
+# 03 — Deliverables and Remediation
+
+**Jump to:** [Engagement Folder Structure](#engagement-folder-structure) · [Formatting & Redaction — Screenshots](#formatting--redaction--screenshots) · [Word (or LibreOffice) — Author Efficiency](#word-or-libreoffice--author-efficiency) · [QA Process](#qa-process) · [Standard Deliverables](#standard-deliverables) · [Risk Scoring](#risk-scoring) · [Writing Remediation Guidance](#writing-remediation-guidance) · [Evidence](#evidence) · [Retest Process](#retest-process) · [SLAs to Suggest](#slas-to-suggest) · [Presentation / Readout](#presentation--readout) · [Common Pitfalls](#common-pitfalls) · [Tooling](#tooling)
 
 A report isn't finished when the PDF is signed. The full deliverable set drives the client through *fix → verify → close*, and that's what generates the next engagement.
 

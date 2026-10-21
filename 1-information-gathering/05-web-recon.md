@@ -1,4 +1,6 @@
-## Web Reconnaissance
+# 05 — Web Reconnaissance
+
+**Jump to:** [Setup](#setup) · [Tech Fingerprinting](#tech-fingerprinting) · [Directory & Content Fuzzing](#directory--content-fuzzing) · [vhost / Subdomain Fuzzing](#vhost--subdomain-fuzzing) · [Parameter Fuzzing](#parameter-fuzzing) · [FinalRecon (one-shot)](#finalrecon-one-shot) · [HTTP Verb Tampering](#http-verb-tampering) · [curl Quick-Ref](#curl-quick-ref) · [Spidering with Burp](#spidering-with-burp)
 
 Once you have a host running HTTP(S), the goal is to discover every endpoint, vhost, subdomain, technology, and (where in scope) WAF before sending a single payload.
 

@@ -1,4 +1,6 @@
-## OSINT (Open-Source Intelligence)
+# 01 — OSINT (Open-Source Intelligence)
+
+**Jump to:** [Google Dorking ("regex for the web")](#google-dorking-regex-for-the-web) · [Pastebin / GitHub Gists](#pastebin--github-gists) · [Internet Archive / Wayback Machine](#internet-archive--wayback-machine) · [Shodan](#shodan) · [Email Enumeration](#email-enumeration) · [People & Breach Intel](#people--breach-intel) · [Recon-ng (modular OSINT framework)](#recon-ng-modular-osint-framework) · [theHarvester](#theharvester) · [ExifTool (metadata)](#exiftool-metadata) · [WHOIS / IP Allocation](#whois--ip-allocation) · [Image / Reverse Search](#image--reverse-search) · [OPSEC Reminders](#opsec-reminders)
 
 Passive reconnaissance — collect everything the public internet already knows about a target without sending packets directly at it. The cleaner your OSINT, the smaller and stealthier your later active recon needs to be.
 

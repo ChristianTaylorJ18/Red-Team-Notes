@@ -1,5 +1,7 @@
 # 06 — Password Attacks
 
+**Jump to:** [The rule](#the-rule) · [Hash identification (do this first every time)](#hash-identification-do-this-first-every-time) · [Cracking workflow (in order — stop when it hits)](#cracking-workflow-in-order--stop-when-it-hits) · [When cracking is too slow](#when-cracking-is-too-slow) · [Spraying (once you have a userlist)](#spraying-once-you-have-a-userlist) · [Brute (only if allowed, no lockout, and you have creds sample)](#brute-only-if-allowed-no-lockout-and-you-have-creds-sample) · [Wordlists worth remembering](#wordlists-worth-remembering) · [The "everything at once" pass (after every new cred)](#the-everything-at-once-pass-after-every-new-cred)
+
 Trigger: any hash you can crack, or any login you can spray.
 Reference: [Password Attacks](../2-pre-exploitation/03-password-attacks.md) · [Wordlist Generation](../2-pre-exploitation/04-wordlist-generation.md).
 

@@ -1,6 +1,10 @@
-## Kerberos Attacks
+# 03 — Kerberos Attacks
 
-Most "instant DA" stories in AD pentest reports trace back to Kerberos abuse. The protocol is heavy on assumptions — abuse those assumptions and you forge tickets, impersonate users, or pass DCs back and forth like keys.
+Most "instant DA" stories in AD pentest reports trace back to Kerberos abuse — forge tickets, impersonate users, or pass DCs back and forth like keys.
+
+**Lane:** harvesting/forging on a Windows host → Rubeus / mimikatz (on-host, runs in your context). From Kali with creds → impacket + `KRB5CCNAME`. Full lane rules: [AD runbook](../7-runbooks/03-active-directory.md).
+
+**Jump to:** [AS-REP Roast](#asreproasting) · [Kerberoast](#kerberoasting) · [Pass-the-Ticket](#pass-the-ticket-ptt) · [Constrained Deleg S4U](#constrained-delegation-abuse-s4u) · [Unconstrained](#unconstrained-delegation) · [RBCD](#resource-based-constrained-delegation-rbcd) · [Golden](#golden-ticket) · [Silver](#silver-ticket) · [Harvest Tickets](#harvesting-tickets) · [OverPass-the-Hash](#overpass-the-hash-forge-a-tgt-from-a-hash) · [PtT Windows](#pass-the-ticket-windows) · [PtT Linux](#pass-the-ticket-linux) · [Pass-the-Cert ADCS](#pass-the-certificate-ad-cs) · [Shadow Creds](#shadow-credentials-msds-keycredentiallink) · [Trusts](#trust-enumeration) · [ExtraSids](#extrasids-attack-child-to-parent-compromise)
 
 ---
 
@@ -229,7 +233,7 @@ Rubeus.exe asktgt /domain:inlanefreight.htb /user:plaintext \
     /aes256:b21c99fc068e3ab2ca789bccbef67de43791fd911c6e15ead25641a8fda3fe60 /nowrap
 ```
 
-### Pass-the-Ticket — Windows
+### Pass-the-Ticket (Windows)
 
 Submit a ticket into the current session:
 
@@ -267,7 +271,7 @@ Rubeus.exe asktgt /user:john /domain:inlanefreight.htb \
 Enter-PSSession -ComputerName DC01
 ```
 
-### Pass-the-Ticket — Linux
+### Pass-the-Ticket (Linux)
 
 Useful when the Linux host is domain-joined and holds keytabs or ccache files.
 
@@ -453,7 +457,7 @@ netdom query /domain:inlanefreight.local workstation
 
 BloodHound's *Map domain trusts* canned query gives you the same map visually.
 
-### ExtraSids Attack (Child → Parent Compromise)
+### ExtraSids Attack (Child to Parent Compromise)
 
 Compromise of a child domain → full forest if SID filtering isn't enforced. You forge a golden ticket in the child that claims membership in the parent's Enterprise Admins group via the `sids` extension.
 

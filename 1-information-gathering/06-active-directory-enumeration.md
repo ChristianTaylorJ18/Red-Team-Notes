@@ -1,4 +1,6 @@
-## Active Directory Enumeration
+# 06 — Active Directory Enumeration
+
+**Jump to:** [Tools of the Trade](#tools-of-the-trade) · [External Recon (before any internal access)](#external-recon-before-any-internal-access) · [Internal Discovery (once you have a pivot)](#internal-discovery-once-you-have-a-pivot) · [Quick Wins (before you have creds)](#quick-wins-before-you-have-creds) · [RPC Endpoint Mapping & Auth-Coercion Surface](#rpc-endpoint-mapping--auth-coercion-surface) · [Getting That First User (Kerbrute)](#getting-that-first-user-kerbrute) · [First Creds → Loot Everything They Touch](#first-creds--loot-everything-they-touch) · [LDAP](#ldap) · [LLMNR / NBT-NS Poisoning](#llmnr--nbt-ns-poisoning) · [BloodHound](#bloodhound) · [From Inside a Windows Host — ActiveDirectory Module](#from-inside-a-windows-host--activedirectory-module) · [PowerView (the heavyweight)](#powerview-the-heavyweight) · [Snaffler — Find Creds in Shares](#snaffler--find-creds-in-shares) · [Windows Host With No Tooling — Built-in Enumeration](#windows-host-with-no-tooling--built-in-enumeration) · [Sample Attack Path (end-to-end playbook)](#sample-attack-path-end-to-end-playbook) · [See Also](#see-also)
 
 Once you can see a Domain Controller, the goal is to map users, groups, computers, ACLs, and trust relationships before authenticating with anything. Most AD attack paths fall directly out of solid enumeration.
 

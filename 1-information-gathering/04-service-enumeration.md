@@ -1,4 +1,6 @@
-## Service Enumeration
+# 04 — Service Enumeration
+
+**Jump to:** [FTP (21)](#ftp-21) · [SMB (137-139, 445)](#smb-137-139-445) · [NFS (111, 2049)](#nfs-111-2049) · [DNS (53)](#dns-53) · [Mail (SMTP / POP3 / IMAP)](#mail-smtp--pop3--imap) · [SNMP (161/162 UDP)](#snmp-161162-udp) · [MySQL (3306)](#mysql-3306) · [MSSQL (1433)](#mssql-1433) · [TNS — Oracle (1521)](#tns--oracle-1521) · [IPMI (623 UDP)](#ipmi-623-udp) · [SSH (22)](#ssh-22) · [Rsync (873)](#rsync-873) · [R-services (512/513/514)](#r-services-512513514) · [RDP (3389)](#rdp-3389) · [WinRM (5985/5986)](#winrm-59855986) · [WMI (135)](#wmi-135) · [Server-Profile Cheats](#server-profile-cheats)
 
 Per-service playbooks for every common port Nmap is likely to find. Each block follows the same shape: where the config lives, dangerous settings to look for, and the tools / commands to interact with it.
 

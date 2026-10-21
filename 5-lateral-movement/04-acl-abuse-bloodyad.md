@@ -1,6 +1,10 @@
-## ACL Abuse with bloodyAD
+# 04 — ACL Abuse (bloodyAD + PowerView)
 
-BloodHound surfaces the *attack edges* — `GenericAll`, `WriteOwner`, `WriteDACL`, `ForceChangePassword`, `AddSelf`, `WriteSPN`. `bloodyAD` is the Linux tool to actually exploit those edges.
+BloodHound surfaces the *attack edges* — `GenericAll`, `WriteOwner`, `WriteDACL`, `ForceChangePassword`, `AddSelf`, `WriteSPN`. This file is how you exploit them.
+
+**Lane:** creds + reach from Kali → **bloodyAD** (below). Domain-joined Windows foothold, no creds → **PowerView** ([workflow](#powerview-acl-workflow-from-a-domain-joined-windows-host)). Reading edges = BloodHound or PowerView; impacket can't read ACLs.
+
+**Jump to:** [Install](#install) · [Read object](#read-an-object) · [Set attribute](#set-an-attribute) · [Add to group](#add-group-membership-when-you-have-rights-on-a-group) · [Writable objects](#show-writeable-objects-which-acl-edges-grant-you-something) · [Abuses by edge](#common-abuses-by-edge) · [ADCS / Certipy](#adcs-abuse-certipy) · [Edge→tool map](#mapping-bloodhound-edges-to-tooling) · [PowerView workflow](#powerview-acl-workflow-from-a-domain-joined-windows-host)
 
 ---
 

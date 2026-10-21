@@ -1,4 +1,6 @@
-## Report Fundamentals
+# 01 — Report Fundamentals
+
+**Jump to:** [Notetaking Strategy (start before you fire the first packet)](#notetaking-strategy-start-before-you-fire-the-first-packet) · [Automatic Terminal Logging (`script`)](#automatic-terminal-logging-script) · [Standard Report Structure](#standard-report-structure) · [1. Executive Summary](#1-executive-summary) · [2. Scope and Objectives](#2-scope-and-objectives) · [3. Methodology](#3-methodology) · [4. Findings Summary Table](#4-findings-summary-table) · [5. Detailed Findings (the template every finding follows)](#5-detailed-findings-the-template-every-finding-follows) · [6. Attack Path Narrative](#6-attack-path-narrative) · [7. Remediation Roadmap](#7-remediation-roadmap) · [8. Appendices](#8-appendices) · [Writing Hygiene](#writing-hygiene) · [Style: Don't Be Punitive](#style-dont-be-punitive) · [Client Communication (bookend every day)](#client-communication-bookend-every-day) · [Working Habits That Compound](#working-habits-that-compound) · [Lessons From Real Attack Chains](#lessons-from-real-attack-chains)
 
 A penetration test report has **two distinct audiences** sharing one document:
 - **Executives** — care about business risk, budget impact, and what they should do next quarter. Read pages 1–3.

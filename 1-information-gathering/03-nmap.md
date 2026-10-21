@@ -1,4 +1,6 @@
-## Nmap
+# 03 — Nmap
+
+**Jump to:** [Default Scans](#default-scans) · [Subnet Sweep (Fast)](#subnet-sweep-fast) · [Firewall / IDS Evasion](#firewall--ids-evasion) · [IPS Evasion](#ips-evasion) · [NSE — Service-Specific Scripts](#nse--service-specific-scripts) · [Output Formats](#output-formats)
 
 The first active step against almost every target. Goal: discover hosts, open ports, services, versions, and (where possible) preliminary CVEs via NSE.
 

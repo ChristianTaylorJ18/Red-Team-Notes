@@ -1,5 +1,7 @@
 # 04 — Linux Privilege Escalation
 
+**Jump to:** [First 5 minutes on any Linux shell](#first-5-minutes-on-any-linux-shell) · [Run the automated tools first (they cover 80%)](#run-the-automated-tools-first-they-cover-80) · [Manual quick wins (in order of frequency)](#manual-quick-wins-in-order-of-frequency) · [Credential hunting](#credential-hunting) · [Service-account escalation](#service-account-escalation) · [Container / VM escape](#container--vm-escape) · [Once root](#once-root)
+
 Trigger: any shell on a Linux host.
 Reference: [Linux Privilege Escalation](../4-post-exploitation/01-linux-privilege-escalation.md) · [Shell Upgrades](../4-post-exploitation/05-shell-upgrades.md) · [Credential Dumping](../4-post-exploitation/03-credential-dumping.md).
 

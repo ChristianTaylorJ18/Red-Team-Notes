@@ -1,5 +1,7 @@
 # 01 — Recon
 
+**Jump to:** [Network sweep (once, at the start)](#network-sweep-once-at-the-start) · [Full port scan (every host, always)](#full-port-scan-every-host-always) · [Service-specific enumeration (per open port)](#service-specific-enumeration-per-open-port) · [OSINT (only when in scope — most CPTS exams limit this)](#osint-only-when-in-scope--most-cpts-exams-limit-this) · [Output you should have after recon](#output-you-should-have-after-recon)
+
 Trigger: any new host, or the start of the engagement.
 Reference: [Information Gathering](../1-information-gathering/).
 

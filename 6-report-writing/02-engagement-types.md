@@ -1,4 +1,6 @@
-## Engagement Types & Compliance
+# 02 — Engagement Types & Compliance
+
+**Jump to:** [Engagement Types](#engagement-types) · [Pentest vs. Red Team — Where the Lines Are](#pentest-vs-red-team--where-the-lines-are) · [Compliance Frameworks](#compliance-frameworks) · [Authorization — The Single Most Important Document](#authorization--the-single-most-important-document) · [When You Find Something Out-of-Scope](#when-you-find-something-out-of-scope)
 
 The same technical work can be wrapped in very different engagement shapes. The shape determines who reads the report, how much detection-and-response gets tested, and which compliance language goes in the cover letter.
 

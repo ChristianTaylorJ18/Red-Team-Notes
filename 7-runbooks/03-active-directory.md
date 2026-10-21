@@ -1,5 +1,7 @@
 # 03 — Active Directory
 
+**Jump to:** [Pick your tool lane (read first)](#pick-your-tool-lane-read-first) · [Zero-cred enum — remote from Kali (do all of these first)](#zero-cred-enum--remote-from-kali-do-all-of-these-first) · [Zero-cred but you have a Windows foothold → PowerView (on-host)](#zero-cred-but-you-have-a-windows-foothold--powerview-on-host) · [When you have one credential (remote lane)](#when-you-have-one-credential-remote-lane) · [Common share loot (do this immediately after mounting anything)](#common-share-loot-do-this-immediately-after-mounting-anything) · [Attack list (tick as you rule each out)](#attack-list-tick-as-you-rule-each-out) · [Lateral movement (post first-machine access)](#lateral-movement-post-first-machine-access) · [Post-DA](#post-da) · [Reminders that catch people out](#reminders-that-catch-people-out)
+
 Trigger: ports 88 (Kerberos), 389/636 (LDAP), 445 (SMB), or 464 (kpasswd) on any host.
 Reference: [AD Enumeration](../1-information-gathering/06-active-directory-enumeration.md) · [AD Initial Access](../3-exploitation/05-ad-initial-access.md) · [AD Overview](../5-lateral-movement/01-active-directory-overview.md) · [Kerberos Attacks](../5-lateral-movement/03-kerberos-attacks.md).
 

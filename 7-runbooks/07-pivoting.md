@@ -1,5 +1,7 @@
 # 07 — Pivoting & Tunneling
 
+**Jump to:** [Confirm there's a second network first](#confirm-theres-a-second-network-first) · [Scan the new subnet from the foothold (before you tunnel)](#scan-the-new-subnet-from-the-foothold-before-you-tunnel) · [Pick a tunneling method (in order of preference)](#pick-a-tunneling-method-in-order-of-preference) · [Once you have a tunnel](#once-you-have-a-tunnel) · [Common breakages](#common-breakages) · [Windows-native pivoting (when you can't upload binaries)](#windows-native-pivoting-when-you-cant-upload-binaries) · [Confirm the pivot before you build on it](#confirm-the-pivot-before-you-build-on-it)
+
 Trigger: you have a foothold on a host with a second network interface / can see a subnet you couldn't reach from Kali.
 Reference: [Windows Pivoting](../5-lateral-movement/05-windows-pivoting.md).
 
