@@ -44,6 +44,7 @@ Each stage folder holds a set of `.md` files covering one focused topic; section
 - [05 - AD Initial Access](./3-exploitation/05-ad-initial-access.md)
 - [06 - Container Escape](./3-exploitation/06-container-escape.md)
 - [07 - Attacking Common Applications](./3-exploitation/07-attacking-common-applications.md)
+- [08 - Sliver C2](./3-exploitation/08-sliver-c2.md)
 
 ### 4. Post-Exploitation
 - [01 - Linux Privilege Escalation](./4-post-exploitation/01-linux-privilege-escalation.md)
@@ -59,6 +60,7 @@ Each stage folder holds a set of `.md` files covering one focused topic; section
 - [03 - Kerberos Attacks](./5-lateral-movement/03-kerberos-attacks.md)
 - [04 - ACL Abuse with bloodyAD](./5-lateral-movement/04-acl-abuse-bloodyad.md)
 - [05 - Windows Pivoting](./5-lateral-movement/05-windows-pivoting.md)
+- [06 - MSSQL Abuse](./5-lateral-movement/06-mssql-abuse.md)
 
 ### 6. Report Writing
 - [01 - Report Fundamentals](./6-report-writing/01-report-fundamentals.md)
