@@ -1,6 +1,6 @@
 # 05 — Web Reconnaissance
 
-**Jump to:** [Setup](#setup) · [Tech Fingerprinting](#tech-fingerprinting) · [Directory & Content Fuzzing](#directory--content-fuzzing) · [vhost / Subdomain Fuzzing](#vhost--subdomain-fuzzing) · [Parameter Fuzzing](#parameter-fuzzing) · [FinalRecon (one-shot)](#finalrecon-one-shot) · [HTTP Verb Tampering](#http-verb-tampering) · [curl Quick-Ref](#curl-quick-ref) · [Spidering with Burp](#spidering-with-burp)
+**Jump to:** [Setup](#setup) · [Tech Fingerprinting](#tech-fingerprinting) · [Directory & Content Fuzzing](#directory--content-fuzzing) · [Reading 3xx During Enumeration](#reading-3xx-during-enumeration-exam-critical) · [vhost / Subdomain Fuzzing](#vhost--subdomain-fuzzing) · [Parameter Fuzzing](#parameter-fuzzing) · [FinalRecon (one-shot)](#finalrecon-one-shot) · [HTTP Verb Tampering](#http-verb-tampering) · [curl Quick-Ref](#curl-quick-ref) · [Spidering with Burp](#spidering-with-burp)
 
 Once you have a host running HTTP(S), the goal is to discover every endpoint, vhost, subdomain, technology, and (where in scope) WAF before sending a single payload.
 
@@ -104,6 +104,38 @@ ffuf -w /opt/useful/seclists/Discovery/Web-Content/directory-list-2.3-small.txt:
 
 Default-creds wordlist (useful early on):
 <https://github.com/danielmiessler/SecLists/tree/master/Passwords/Default-Credentials>
+
+### Reading 3xx During Enumeration (exam-critical)
+
+A `301`/`302` is **not** "unreachable" and usually **not** a dead end. What it means
+depends entirely on *what you fuzzed* — and mixing these two up wastes exam time:
+
+| Where the 3xx shows up | What it means | Action |
+|---|---|---|
+| On a **path** — `http://host/FUZZ` | Found a directory; server redirects `/dir` → `/dir/` | **It's a hit.** Chase it. Do **not** filter it out |
+| On the **Host header** — `-H 'Host: FUZZ.host'`, or a bare-IP request | Wrong/default vhost; server bounces you to the canonical hostname | Map the real host in `/etc/hosts`, then vhost-fuzz |
+
+**Directory mode and vhost mode are different searches — run BOTH on every web target.**
+They find different things and one finding the "nothing" does not mean the other will:
+
+```bash
+## 1. Directory mode — finds PATHS (/tiny, /admin, /api.php). A 301 here = found dir.
+ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt:FUZZ \
+     -u http://target/FUZZ -mc 200,301,302,307,401,403
+
+## 2. vhost mode — finds VIRTUAL HOSTS (soc-player.target). Separate run, Host header.
+ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt:FUZZ \
+     -u http://target/ -H 'Host: FUZZ.target' -ac
+```
+
+> **Never let `-ac` or a status/size filter swallow 3xx in a *directory* scan.**
+> `gobuster dir` reports 301/302 as hits by default — that's the whole reason it
+> "finds things ffuf misses." The real difference is almost always that ffuf was
+> in **vhost mode** (fuzzing the Host header) or had `-ac`/`-fc`/`-fs` eating the
+> redirects. If a dir scan comes up empty, check in this order:
+> 1. Am I fuzzing the **path** (`/FUZZ`) or the **Host** (`-H`)? Pick the one that matches what I'm looking for.
+> 2. Are my `-mc`/`-fc`/`-fs` filters hiding 3xx? Add `-mc 200,301,302,307,401,403` or drop `-ac`.
+> 3. Only then: wrong/too-small wordlist → escalate the raft lists.
 
 ### vhost / Subdomain Fuzzing
 
