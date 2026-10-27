@@ -41,6 +41,7 @@ Any of these = instant local admin/SYSTEM:
 
 ## Credential hunting
 
+- [ ] **Running as a service account (`sql_svc`, `svc_*`, `*_svc`, or `whoami` shows a service identity)? Read that service's own install / log / config directory FIRST** — go to the known path, don't recurse `C:\` (it'll hang your shell). Service logs, *including error logs*, and config files routinely leak plaintext creds. Classic: MSSQL writes failed logins to its `ERRORLOG`, so a user who fat-fingered their password into the username field leaks it in cleartext — `type "<SQL-dir>\MSSQL\Log\ERRORLOG*"`. Same pattern for IIS app pools (`web.config`), scheduled-task scripts, and any custom service's data dir.
 - [ ] Registry autorun creds: `reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v DefaultPassword`.
 - [ ] Unattend files: `dir /s /b unattend.xml sysprep.xml autounattend.xml 2>nul`.
 - [ ] PowerShell history: `type $env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt`.
