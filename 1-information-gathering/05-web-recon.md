@@ -95,6 +95,12 @@ ffuf -w /opt/useful/seclists/Discovery/Web-Content/directory-list-2.3-small.txt:
 > /usr/share/seclists/Discovery/Web-Content/raft-small-files.txt
 > # also -medium- / -large- variants of each when small comes up empty
 > ```
+>
+> Try several *small* lists before escalating to medium/large — a miss usually
+> means wrong list, not wrong technique. e.g. run `raft-small-words.txt`, then
+> `raft-small-directories.txt`, then the `-files` variant, before reaching for
+> `-medium-`. Cheap to burn through all three small lists; expensive to sit on
+> one large one.
 
 Default-creds wordlist (useful early on):
 <https://github.com/danielmiessler/SecLists/tree/master/Passwords/Default-Credentials>
