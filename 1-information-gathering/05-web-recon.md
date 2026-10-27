@@ -87,6 +87,15 @@ ffuf -w /opt/useful/seclists/Discovery/Web-Content/directory-list-2.3-small.txt:
 /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt
 ```
 
+> **CPTS/HTB favor the `raft` wordlists.** The courseware leans on these heavily for both content and vhost/subdomain fuzzing — reach for them before the `subdomains-top1million-*` lists. `raft-small-words.txt` is the go-to default (e.g. Soccer's `soc-player` vhost lands on raft-small, not top-5000):
+>
+> ```bash
+> /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt
+> /usr/share/seclists/Discovery/Web-Content/raft-small-directories.txt
+> /usr/share/seclists/Discovery/Web-Content/raft-small-files.txt
+> # also -medium- / -large- variants of each when small comes up empty
+> ```
+
 Default-creds wordlist (useful early on):
 <https://github.com/danielmiessler/SecLists/tree/master/Passwords/Default-Credentials>
 
@@ -98,8 +107,9 @@ ffuf -w /opt/useful/seclists/Discovery/DNS/subdomains-top1million-5000.txt:FUZZ 
      -u https://FUZZ.inlanefreight.com/
 
 ## vhost — internal hosts that share an IP, switched on Host header
-ffuf -w /opt/useful/seclists/Discovery/DNS/subdomains-top1million-5000.txt:FUZZ \
-     -u http://academy.htb:PORT/ -H 'Host: FUZZ.academy.htb'
+## CPTS/HTB tip: prefer raft-small-words.txt here; top-5000 misses many box vhosts
+ffuf -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt:FUZZ \
+     -u http://academy.htb:PORT/ -H 'Host: FUZZ.academy.htb' -ac
 
 ## Filter once you know the wildcard size
 ffuf -u http://<ip> -H "Host: FUZZ.<domain>" -w <wordlist> -fs 157 -ac -t 100
